@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Variants } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -13,19 +13,39 @@ import {
   Filter
 } from '../icons';
 import BottomNav from '../components/BottomNav';
+import { supabase } from '../supabase';
 
 const PremiumPhotoGallery: React.FC = () => {
   const navigate = useNavigate();
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('Recentes');
+  const [loading, setLoading] = useState(true);
+  const [photos, setPhotos] = useState<any[]>([]);
 
-  const photos = [
-    { id: 1, src: '/artifacts/jiujitsu_training_1773243516160.png', title: 'Treino de Grappling', category: 'Treinos' },
-    { id: 2, src: '/artifacts/modern_dojo_bg_1773243537365.png', title: 'Visão do Dojo Principal', category: 'Instalações' },
-    { id: 3, src: '/artifacts/martial_arts_black_and_white_1773245780192.png', title: 'Domínio do Ar', category: 'Momentos' },
-    { id: 4, src: '/artifacts/meditation_focus_martial_arts_1773245799687.png', title: 'Foco e Meditação', category: 'Mental' },
-    { id: 5, src: '/artifacts/warrior_avatar_1773243555349.png', title: 'Retrato de Aluno', category: 'Alunos' },
-    { id: 6, src: '/artifacts/instructor_avatar_1773243572454.png', title: 'Sifu em Demonstração', category: 'Mestres' }
-  ];
+  useEffect(() => {
+    async function fetchPhotos() {
+      setLoading(true);
+      let query = supabase.from('photos').select('*').order('created_at', { ascending: false });
+      
+      if (activeTab !== 'Recentes') {
+        query = query.eq('category', activeTab);
+      }
+
+      const { data, error } = await query;
+      if (!error && data) {
+        setPhotos(data.map((p, idx) => ({
+          id: p.id,
+          src: p.image_url,
+          title: p.title,
+          category: p.category,
+          idx
+        })));
+      }
+      setLoading(false);
+    }
+    
+    fetchPhotos();
+  }, [activeTab]);
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -74,8 +94,12 @@ const PremiumPhotoGallery: React.FC = () => {
            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-primary">
               <Filter size={18} />
            </div>
-           {['Recentes', 'Dojo', 'Treinos', 'Seminários', 'Alunos'].map((f, i) => (
-             <button key={i} className={`h-11 shrink-0 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${i === 0 ? 'bg-primary border-primary text-white shadow-xl shadow-primary/20' : 'bg-card-dark border-border-dark text-slate-500'}`}>
+           {['Recentes', 'Instalações', 'Treinos', 'Momentos', 'Mental', 'Alunos', 'Mestres'].map((f, i) => (
+             <button 
+               key={i} 
+               onClick={() => setActiveTab(f)}
+               className={`h-11 shrink-0 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${activeTab === f ? 'bg-primary border-primary text-white shadow-xl shadow-primary/20' : 'bg-card-dark border-border-dark text-slate-500'}`}
+             >
                 {f}
              </button>
            ))}
@@ -83,14 +107,23 @@ const PremiumPhotoGallery: React.FC = () => {
 
         {/* High Precision Masonry/Grid */}
         <section className="grid grid-cols-2 gap-4">
-           {photos.map((photo, idx) => (
+           {loading ? (
+             <div className="col-span-2 py-20 flex flex-col items-center justify-center text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+               <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin mb-3" />
+               Carregando Lentes...
+             </div>
+           ) : photos.length === 0 ? (
+             <div className="col-span-2 py-20 flex flex-col items-center justify-center text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-dashed border-border-dark rounded-3xl">
+               Nenhuma foto encontrada
+             </div>
+           ) : photos.map((photo) => (
              <motion.div
                key={photo.id}
                variants={itemVariants}
                whileHover={{ y: -5, scale: 1.02 }}
                whileTap={{ scale: 0.98 }}
                onClick={() => setSelectedPhoto(photo.src)}
-               className={`group relative rounded-[2.5rem] overflow-hidden bg-card-dark border border-border-dark shadow-2xl cursor-zoom-in ${idx % 3 === 0 ? 'col-span-1 h-80' : 'h-60'}`}
+               className={`group relative rounded-[2.5rem] overflow-hidden bg-card-dark border border-border-dark shadow-2xl cursor-zoom-in ${photo.idx % 3 === 0 ? 'col-span-1 h-80' : 'h-60'}`}
              >
                 <img src={photo.src} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700" alt={photo.title} />
                 <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-card-dark/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 p-6 flex flex-col justify-end">

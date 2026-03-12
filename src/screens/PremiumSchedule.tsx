@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Variants } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -16,17 +16,64 @@ import {
   Zap
 } from '../icons';
 import BottomNav from '../components/BottomNav';
+import { supabase } from '../supabase';
+
+interface ClassData {
+  id: string;
+  title: string;
+  instructor_name: string;
+  category: string;
+  level: string;
+  start_time: string;
+  duration_minutes: number;
+  max_spots: number;
+  status: 'available' | 'full' | 'cancelled';
+}
 
 const PremiumSchedule: React.FC = () => {
   const navigate = useNavigate();
   const [selectedDay, setSelectedDay] = useState(12);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const classes = [
-    { time: '07:00', duration: '60 min', title: 'Muay Thai', instructor: 'Mestre Sérgio', spots: '8 Vagas', level: 'Intermediário', status: 'available', category: 'Lutas' },
-    { time: '09:00', duration: '90 min', title: 'Karatê Do', instructor: 'Sensei Tanaka', spots: '4 Vagas', level: 'Todos Níveis', status: 'available', category: 'Tradicional' },
-    { time: '11:00', duration: '60 min', title: 'Kickboxing', instructor: 'Instrutora Ana', spots: 'Esgotado', level: 'Avançado', status: 'full', category: 'Cardio' },
-    { time: '18:30', duration: '60 min', title: 'Jiu-Jitsu No-Gi', instructor: 'Mestre Sérgio', spots: '12 Vagas', level: 'Iniciante', status: 'available', category: 'Grappling' },
-  ];
+  useEffect(() => {
+    async function fetchClasses() {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('classes')
+        .select(`
+          *,
+          profiles(full_name)
+        `)
+        .order('start_time', { ascending: true });
+
+      if (!error && data) {
+        // Mapeando para o formato que a UI consumia
+        const formatted = data.map((cls: any) => {
+          const startTime = new Date(cls.start_time);
+          const hours = startTime.getHours().toString().padStart(2, '0');
+          const minutes = startTime.getMinutes().toString().padStart(2, '0');
+
+          return {
+            id: cls.id,
+            time: `${hours}:${minutes}`,
+            duration: `${cls.duration_minutes} min`,
+            title: cls.title,
+            instructor: cls.profiles?.full_name || 'Prof. Substituto',
+            spots: cls.max_spots === 0 ? 'Esgotado' : `${cls.max_spots} Vagas`,
+            level: cls.level,
+            status: cls.status,
+            category: cls.category
+          };
+        });
+        setClasses(formatted);
+      }
+      setLoading(false);
+    }
+    
+    fetchClasses();
+  }, [selectedDay]); // O selectedDay fará reload quando mudarmos a lógica de datas futuramente
+
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -128,9 +175,18 @@ const PremiumSchedule: React.FC = () => {
            </div>
 
            <div className="space-y-4">
-              {classes.map((cls, i) => (
+              {loading ? (
+                <div className="p-10 text-center text-slate-500 font-bold uppercase tracking-widest text-xs flex justify-center items-center gap-3">
+                  <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                  Carregando Aulas...
+                </div>
+              ) : classes.length === 0 ? (
+                <div className="p-10 text-center text-slate-500 font-bold uppercase tracking-widest text-xs">
+                  Nenhuma aula encontrada para este dia.
+                </div>
+              ) : classes.map((cls, i) => (
                 <motion.div
-                  key={i}
+                  key={cls.id || i}
                   variants={itemVariants}
                   whileHover={{ scale: 1.02, backgroundColor: cls.status === 'full' ? '' : 'rgba(255,107,0,0.05)' }}
                   className={`relative p-6 rounded-[2.5rem] border transition-all overflow-hidden ${
