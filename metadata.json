@@ -1,0 +1,7 @@
+{
+  "name": "Arte da Defesa Pessoal",
+  "description": "Aplicativo oficial da Academia de Artes Marciais do Mestre Sérgio. Agende aulas, assista tutoriais e acompanhe seu progresso.",
+  "requestFramePermissions": [
+    "notifications"
+  ]
+}
