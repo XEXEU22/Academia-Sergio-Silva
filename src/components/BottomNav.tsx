@@ -1,16 +1,18 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Home, Calendar, Video, User, Bell, Image as ImageIcon, Dumbbell, Zap } from '../icons';
+import { Home, Calendar, Video, User, Bell, Image as ImageIcon, Dumbbell, Zap, GraduationCap } from '../icons';
 
 const BottomNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const navItems = [
-    { path: '/dashboard', label: 'Início', icon: Home },
+    { path: '/', label: 'Início', icon: Home },
     { path: '/schedule', label: 'Agenda', icon: Calendar },
     { path: '/videos', label: 'Treinos', icon: Zap },
+    { path: '/gallery', label: 'Galeria', icon: ImageIcon },
+    { path: '/dashboard', label: 'Aluno', icon: GraduationCap },
     { path: '/instructor', label: 'Perfil', icon: User },
   ];
 
@@ -18,7 +20,9 @@ const BottomNav: React.FC = () => {
     <nav className="fixed bottom-0 left-0 right-0 z-[60] border-t border-border-dark bg-background-dark/80 backdrop-blur-3xl px-6 pb-10 pt-5">
       <div className="flex justify-between items-center max-w-sm mx-auto relative">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = item.path === '/' 
+            ? location.pathname === '/' 
+            : location.pathname.startsWith(item.path);
           const Icon = item.icon;
           return (
             <button

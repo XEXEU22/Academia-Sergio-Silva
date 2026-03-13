@@ -21,6 +21,12 @@ const PremiumPhotoGallery: React.FC = () => {
   const [activeTab, setActiveTab] = useState('Recentes');
   const [loading, setLoading] = useState(true);
   const [photos, setPhotos] = useState<any[]>([]);
+  const fallbackImages = [
+    'https://images.unsplash.com/photo-1552072092-7f9b8d63efcb?q=80&w=800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1599058917212-d750089bc07e?q=80&w=800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1517438476312-10d79c67750d?q=80&w=800&auto=format&fit=crop',
+  ];
 
   useEffect(() => {
     async function fetchPhotos() {
@@ -33,13 +39,21 @@ const PremiumPhotoGallery: React.FC = () => {
 
       const { data, error } = await query;
       if (!error && data) {
-        setPhotos(data.map((p, idx) => ({
-          id: p.id,
-          src: p.image_url,
-          title: p.title,
-          category: p.category,
-          idx
-        })));
+        setPhotos(data.map((p, idx) => {
+          let imageUrl = p.image_url;
+          // Se a imagem for local e apontar para a pasta deletada, ou se for indefinida
+          if (!imageUrl || imageUrl.includes('/fotos/')) {
+            imageUrl = fallbackImages[idx % fallbackImages.length];
+          }
+          
+          return {
+            id: p.id,
+            src: imageUrl,
+            title: p.title,
+            category: p.category,
+            idx
+          };
+        }));
       }
       setLoading(false);
     }
@@ -125,7 +139,17 @@ const PremiumPhotoGallery: React.FC = () => {
                onClick={() => setSelectedPhoto(photo.src)}
                className={`group relative rounded-[2.5rem] overflow-hidden bg-card-dark border border-border-dark shadow-2xl cursor-zoom-in ${photo.idx % 3 === 0 ? 'col-span-1 h-80' : 'h-60'}`}
              >
-                <img src={photo.src} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700" alt={photo.title} />
+                <img 
+                  src={photo.src} 
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (!target.src.includes('unsplash')) {
+                      target.src = fallbackImages[photo.idx % fallbackImages.length];
+                    }
+                  }}
+                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700" 
+                  alt={photo.title} 
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-card-dark/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 p-6 flex flex-col justify-end">
                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1">{photo.category}</p>
                    <h4 className="text-sm font-black text-white leading-tight uppercase tracking-widest">{photo.title}</h4>

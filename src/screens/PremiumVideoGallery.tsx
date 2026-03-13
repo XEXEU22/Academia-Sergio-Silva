@@ -12,7 +12,9 @@ import {
   Star, 
   PlayCircle,
   Filter,
-  CheckCircle2
+  CheckCircle2,
+  Youtube,
+  X
 } from '../icons';
 import BottomNav from '../components/BottomNav';
 import { supabase } from '../supabase';
@@ -23,6 +25,7 @@ const PremiumVideoGallery: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<any[]>([]);
   const [featuredVideo, setFeaturedVideo] = useState<any>(null);
+  const [activeVideo, setActiveVideo] = useState<any>(null);
 
   useEffect(() => {
     async function fetchVideos() {
@@ -51,6 +54,7 @@ const PremiumVideoGallery: React.FC = () => {
         // Mapear os vídeos listados
         const mapped = data.map(v => ({
           title: v.title,
+          video_url: v.video_url,
           instructor: v.profiles?.full_name || 'Desconhecido',
           views: `${v.views_count / 1000}k`,
           duration: v.duration,
@@ -64,6 +68,13 @@ const PremiumVideoGallery: React.FC = () => {
 
     fetchVideos();
   }, [selectedFilter]);
+
+  const getEmbedUrl = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    const videoId = (match && match[2].length === 11) ? match[2] : null;
+    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : null;
+  };
 
 
   const filters = ['Todos', 'Jiu-Jitsu', 'Muay Thai', 'Wing Chun', 'Kickboxing', 'Defesa'];
@@ -141,7 +152,8 @@ const PremiumVideoGallery: React.FC = () => {
             <motion.div 
               variants={itemVariants}
               whileHover={{ y: -5 }}
-              className="group relative rounded-[2.5rem] overflow-hidden bg-card-dark border border-border-dark aspect-video shadow-2xl shadow-primary/10"
+              onClick={() => setActiveVideo(featuredVideo)}
+              className="group relative rounded-[2.5rem] overflow-hidden bg-card-dark border border-border-dark aspect-video shadow-2xl shadow-primary/10 cursor-pointer"
             >
               <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-card-dark/20 to-transparent z-10" />
               <img 
@@ -205,6 +217,7 @@ const PremiumVideoGallery: React.FC = () => {
                 key={idx}
                 variants={itemVariants}
                 whileHover={{ x: 10 }}
+                onClick={() => setActiveVideo(video)}
                 className="group flex gap-5 p-4 rounded-3xl bg-card-dark border border-border-dark hover:border-primary/30 transition-all cursor-pointer"
               >
                 <div className="relative w-36 h-24 shrink-0 rounded-2xl overflow-hidden bg-card-dark/80 ring-2 ring-white/5">
@@ -261,6 +274,79 @@ const PremiumVideoGallery: React.FC = () => {
       </motion.main>
       
       <BottomNav />
+
+      {/* Modern Video Player Overlay */}
+      <AnimatePresence>
+        {activeVideo && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-background-dark/95 backdrop-blur-2xl flex flex-col pt-12"
+          >
+            <div className="px-6 flex items-center justify-between mb-8">
+              <button 
+                onClick={() => setActiveVideo(null)}
+                className="p-3 rounded-2xl bg-white/5 border border-white/10 text-white"
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <div className="text-center">
+                <p className="text-[10px] text-primary font-black uppercase tracking-[0.3em] mb-1">Assistindo Agora</p>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">{activeVideo.category || activeVideo.type}</h4>
+              </div>
+              <button 
+                onClick={() => setActiveVideo(null)}
+                className="p-3 rounded-2xl bg-white/5 border border-white/10 text-white"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="flex-1 px-4 flex flex-col max-w-4xl mx-auto w-full">
+              <div className="relative aspect-video rounded-[2.5rem] overflow-hidden bg-black shadow-2xl ring-1 ring-white/10">
+                {activeVideo.video_url ? (
+                  <iframe 
+                    src={getEmbedUrl(activeVideo.video_url) || ''}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-700 space-y-4">
+                    <Youtube size={64} />
+                    <p className="text-sm font-black uppercase tracking-widest">Vídeo Indisponível</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-10 px-4 space-y-6">
+                <div>
+                  <h3 className="text-3xl font-black tracking-tight text-white mb-4 leading-none">
+                    {activeVideo.title}
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <div className="size-10 rounded-full border border-primary/30 p-0.5">
+                      <img src="/artifacts/mestre_sergio_profile_pic_2_1773245462033.png" className="w-full h-full object-cover rounded-full" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white">{activeVideo.instructor}</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Mestre de Elite</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-[2rem] bg-white/5 border border-white/10 space-y-4">
+                  <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Descrição do Treino</h5>
+                  <p className="text-sm text-slate-400 leading-relaxed italic">
+                    "Foque na precisão dos movimentos e na respiração. A técnica supera a força quando aplicada no momento exato."
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

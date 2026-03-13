@@ -69,9 +69,14 @@ import {
   Grid,
   Smartphone,
   ShieldCheck,
-  Crown
+  Crown,
+  Youtube,
+  Save,
+  Link,
+  BarChart
 } from 'lucide-react';
 
+// Export all icons for use throughout the app
 export {
   Home,
   Calendar,
@@ -143,5 +148,9 @@ export {
   Grid,
   Smartphone,
   ShieldCheck,
-  Crown
+  Crown,
+  Youtube,
+  Save,
+  Link,
+  BarChart
 };

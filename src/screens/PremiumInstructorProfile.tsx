@@ -66,9 +66,9 @@ const PremiumInstructorProfile: React.FC = () => {
              <div className="absolute inset-0 bg-primary/30 rounded-full blur-[40px] animate-pulse scale-125" />
              <div className="relative size-40 rounded-full border-[6px] border-primary p-1.5 bg-card-dark shadow-2xl overflow-hidden ring-offset-4 ring-offset-background-dark ring-2 ring-primary/20">
                 <img 
-                  alt="Mestre Sérgio" 
-                  className="w-full h-full object-cover rounded-full" 
-                  src="/artifacts/mestre_sergio_profile_pic_2_1773245462033.png" 
+                   alt="Mestre Sérgio" 
+                   className="w-full h-full object-cover rounded-full" 
+                   src="https://ui-avatars.com/api/?name=S+S&background=FF6B00&color=fff" 
                 />
              </div>
              <div className="absolute bottom-2 right-2 bg-primary text-white size-10 rounded-full flex items-center justify-center border-4 border-background-dark shadow-2xl">

@@ -46,13 +46,13 @@ const PremiumHome: React.FC = () => {
     {
       title: "Exame de Graduação",
       desc: "Prepare-se para o seminário de final de mês com o Mestre Takeshi.",
-      img: "/artifacts/jiujitsu_training_1773243516160.png",
+      img: "https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop",
       badge: "NOVO"
     },
     {
       title: "Masterclass No-Gi",
       desc: "Aprimore suas técnicas de finalização sem o uso do kimono.",
-      img: "/artifacts/modern_dojo_bg_1773243537365.png",
+      img: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?q=80&w=800&auto=format&fit=crop",
       badge: "ELITE"
     }
   ];
@@ -91,7 +91,7 @@ const PremiumHome: React.FC = () => {
             onClick={() => navigate('/instructor')}
             className="size-10 rounded-xl border border-white/10 p-0.5 overflow-hidden bg-background-dark group"
           >
-             <img src="/artifacts/mestre_sergio_profile_pic_2_1773245462033.png" className="w-full h-full object-cover rounded-[0.5rem] opacity-80 group-hover:opacity-100 transition-opacity" alt="Mestre" />
+             <img src="https://ui-avatars.com/api/?name=S+S&background=FF6B00&color=fff" className="w-full h-full object-cover rounded-[0.5rem] opacity-80 group-hover:opacity-100 transition-opacity" alt="Mestre" />
           </motion.button>
         </div>
       </header>
@@ -109,7 +109,7 @@ const PremiumHome: React.FC = () => {
              animate={{ scale: 1, opacity: 1 }}
              transition={{ duration: 1.5 }}
              className="absolute inset-0 bg-cover bg-top bg-no-repeat"
-             style={{ backgroundImage: 'url("/artifacts/media__1773248113670.jpg")' }}
+             style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=1200&auto=format&fit=crop")' }}
            />
            {/* Gradiente para suavizar a transição com o fundo */}
            <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/20 to-transparent z-10" />
@@ -147,7 +147,7 @@ const PremiumHome: React.FC = () => {
              >
                 <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/20 to-transparent z-10" />
                 <img 
-                  src="/artifacts/jiujitsu_training_1773243516160.png" 
+                  src="https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop" 
                   alt="Teaser" 
                   className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                 />

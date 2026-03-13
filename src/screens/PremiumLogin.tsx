@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '../supabase';
 import { motion, AnimatePresence, Variants } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -17,6 +18,29 @@ import {
 const PremiumLogin: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      setError(signInError.message);
+      setLoading(false);
+    } else {
+      navigate('/dashboard');
+    }
+  };
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -72,8 +96,13 @@ const PremiumLogin: React.FC = () => {
         <motion.form 
           variants={itemVariants}
           className="space-y-6" 
-          onSubmit={(e) => { e.preventDefault(); navigate('/dashboard'); }}
+          onSubmit={handleLogin}
         >
+          {error && (
+            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold">
+              {error}
+            </div>
+          )}
           <div className="space-y-3">
             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 px-1">Seu E-mail</label>
             <div className="relative group">
@@ -84,6 +113,8 @@ const PremiumLogin: React.FC = () => {
                 type="email" 
                 className="w-full h-16 rounded-2xl border border-border-dark bg-card-dark/50 pl-16 pr-6 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 outline-none transition-all text-sm font-bold placeholder:text-slate-700 backdrop-blur-sm"
                 placeholder="exemplo@combate.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -108,6 +139,8 @@ const PremiumLogin: React.FC = () => {
                 type={showPassword ? "text" : "password"} 
                 className="w-full h-16 rounded-2xl border border-border-dark bg-card-dark/50 pl-16 pr-16 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 outline-none transition-all text-sm font-bold placeholder:text-slate-700 backdrop-blur-sm"
                 placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <button 
@@ -132,12 +165,19 @@ const PremiumLogin: React.FC = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
-            className="w-full h-16 bg-primary text-white font-black text-xs uppercase tracking-[0.4em] rounded-2xl shadow-xl shadow-primary/30 mt-8 relative overflow-hidden group border border-primary/20"
+            className="w-full h-16 bg-primary text-white font-black text-xs uppercase tracking-[0.4em] rounded-2xl shadow-xl shadow-primary/30 mt-8 relative overflow-hidden group border border-primary/20 flex items-center justify-center"
+            disabled={loading}
           >
-             <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-             <div className="flex items-center justify-center gap-3">
-                 Entrar <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-             </div>
+             {loading ? (
+               <div className="w-6 h-6 rounded-full border-2 border-white border-t-transparent animate-spin" />
+             ) : (
+               <>
+                 <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                 <div className="flex items-center justify-center gap-3">
+                     Entrar <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                 </div>
+               </>
+             )}
           </motion.button>
         </motion.form>
 

@@ -13,13 +13,25 @@ import {
   ChevronRight,
   Activity,
   Zap,
-  Target
+  Target,
+  Video,
+  ShieldCheck
 } from '../icons';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
+import { useAuth } from '../contexts/AuthContext';
 
 const PremiumDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { profile, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="bg-background-dark min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -43,6 +55,8 @@ const PremiumDashboard: React.FC = () => {
     }
   };
 
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'instructor';
+
   return (
     <div className="bg-background-dark min-h-screen flex flex-col text-slate-100 font-display selection:bg-primary selection:text-white">
       {/* Premium Gradient Header */}
@@ -54,27 +68,39 @@ const PremiumDashboard: React.FC = () => {
             className="size-10 rounded-full border-2 border-primary p-0.5 overflow-hidden ring-4 ring-primary/10"
           >
             <img 
-              src="/artifacts/warrior_avatar_1773243555349.png" 
+              src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${profile?.full_name || 'Guerreiro'}&background=random&color=fff`} 
               alt="Avatar" 
               className="w-full h-full object-cover rounded-full"
             />
           </motion.div>
           <div>
-            <h2 className="text-sm font-semibold tracking-tight">Alex Viana</h2>
+            <h2 className="text-sm font-semibold tracking-tight">{profile?.full_name || 'Guerreiro'}</h2>
             <div className="flex items-center gap-1.5">
-              <span className="size-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-              <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Guerreiro Ativo</p>
+              <span className={`size-1.5 rounded-full shadow-lg ${isAdmin ? 'bg-primary' : 'bg-emerald-500'}`} />
+              <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+                {profile?.role === 'admin' ? 'Administrador' : profile?.role === 'instructor' ? 'Instrutor' : 'Guerreiro Ativo'}
+              </p>
             </div>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
+          {isAdmin && (
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/admin')}
+              className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary"
+            >
+              <ShieldCheck size={20} />
+            </motion.button>
+          )}
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="p-2.5 rounded-xl bg-card-dark border border-border-dark transition-colors relative"
+            className="p-2.5 rounded-xl bg-card-dark border border-border-dark transition-colors relative text-slate-400"
           >
-            <Bell size={20} className="text-slate-300" />
+            <Bell size={20} />
             <span className="absolute top-2 right-2 size-2 bg-primary rounded-full ring-2 ring-background-dark" />
           </motion.button>
         </div>
@@ -98,10 +124,13 @@ const PremiumDashboard: React.FC = () => {
             variants={itemVariants}
             className="text-4xl font-extrabold tracking-tight leading-none mb-4 bg-gradient-to-r from-white to-slate-500 bg-clip-text text-transparent"
           >
-            Osu, Alex!
+            Osu, {profile?.full_name?.split(' ')[0] || 'Guerreiro'}!
           </motion.h1>
           <motion.p variants={itemVariants} className="text-slate-400 max-w-xs text-sm leading-relaxed">
-            Você está a apenas <span className="text-white font-semibold">12 treinos</span> de alcançar a sua próxima graduação.
+            {profile?.role === 'admin' 
+              ? 'Pronto para gerenciar a academia e inspirar seus alunos?'
+              : `Você está a apenas ${profile?.experience_years ? 20 - profile.experience_years : 12} treinos de alcançar a sua próxima graduação.`
+            }
           </motion.p>
         </section>
 
@@ -114,15 +143,15 @@ const PremiumDashboard: React.FC = () => {
             
             <div className="flex items-center justify-between mb-6">
               <div className="space-y-1">
-                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Nível Atual</p>
+                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Graduação Atual</p>
                 <div className="flex items-center gap-2">
                   <Award className="text-primary" size={18} />
-                  <h3 className="text-xl font-bold">Faixa Marrom</h3>
+                  <h3 className="text-xl font-bold">{profile?.belt_level || 'Faixa Branca'}</h3>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Aulas</p>
-                <p className="text-xl font-bold text-primary">85%</p>
+                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Nível</p>
+                <p className="text-xl font-bold text-primary">{profile?.experience_years || 0}0%</p>
               </div>
             </div>
 
@@ -130,7 +159,7 @@ const PremiumDashboard: React.FC = () => {
               <div className="h-3 w-full bg-background-dark rounded-full overflow-hidden p-0.5 border border-border-dark">
                 <motion.div 
                    initial={{ width: 0 }}
-                   animate={{ width: '85%' }}
+                   animate={{ width: `${(profile?.experience_years || 0) * 10}%` }}
                    transition={{ duration: 1.5, ease: "easeOut" }}
                    className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full relative"
                 >
@@ -138,8 +167,8 @@ const PremiumDashboard: React.FC = () => {
                 </motion.div>
               </div>
               <div className="flex justify-between text-[10px] font-bold text-slate-500">
-                <span>FAIXA MARROM</span>
-                <span>FAIXA PRETA</span>
+                <span>BRANCA</span>
+                <span>PRETA</span>
               </div>
             </div>
           </div>
@@ -150,8 +179,8 @@ const PremiumDashboard: React.FC = () => {
           {[
             { icon: Calendar, label: 'Agendar', color: 'bg-primary/10 text-primary', desc: 'Próxima Aula', path: '/schedule' },
             { icon: TrendingUp, label: 'Evolução', color: 'bg-emerald-500/10 text-emerald-400', desc: 'Estatísticas' },
-            { icon: PlayCircle, label: 'Técnicas', color: 'bg-primary/10 text-primary', desc: '148 Vídeos', path: '/videos' },
-            { icon: Trophy, label: 'Conquistas', color: 'bg-amber-500/10 text-amber-400', desc: '8 Medalhas' }
+            { icon: PlayCircle, label: 'Técnicas', color: 'bg-primary/10 text-primary', desc: 'Vídeos', path: '/videos' },
+            { icon: isAdmin ? ShieldCheck : Trophy, label: isAdmin ? 'Admin' : 'Conquistas', color: isAdmin ? 'bg-indigo-500/10 text-indigo-400' : 'bg-amber-500/10 text-amber-400', desc: isAdmin ? 'Acesso Master' : '8 Medalhas', path: isAdmin ? '/admin' : undefined },
           ].map((action, idx) => (
             <motion.button
               key={idx}
@@ -188,7 +217,7 @@ const PremiumDashboard: React.FC = () => {
           >
             <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/40 to-transparent z-10" />
             <img 
-              src="/artifacts/jiujitsu_training_1773243516160.png" 
+              src="https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop" 
               alt="Training" 
               className="w-full h-56 object-cover object-center group-hover:scale-110 transition-transform duration-700 opacity-60"
             />
@@ -209,7 +238,7 @@ const PremiumDashboard: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <div className="size-8 rounded-full border border-white/20 overflow-hidden ring-2 ring-white/5">
                     <img 
-                      src="/artifacts/instructor_avatar_1773243572454.png" 
+                      src="https://ui-avatars.com/api/?name=S+S&background=FF6B00&color=fff" 
                       alt="Sensei" 
                       className="w-full h-full object-cover"
                     />

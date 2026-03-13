@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '../supabase';
 import { motion, AnimatePresence, Variants } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -20,6 +21,43 @@ import {
 const PremiumRegister: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Form states
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [specialty, setSpecialty] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          phone,
+          specialty,
+        }
+      }
+    });
+
+    if (signUpError) {
+      setError(signUpError.message);
+      setLoading(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setLoading(false);
+      alert('Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta.');
+      navigate('/login');
+    }
+  };
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -85,8 +123,13 @@ const PremiumRegister: React.FC = () => {
         <motion.form 
           variants={itemVariants}
           className="space-y-5" 
-          onSubmit={(e) => { e.preventDefault(); navigate('/dashboard'); }}
+          onSubmit={handleRegister}
         >
+          {error && (
+            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold">
+              {error}
+            </div>
+          )}
           <div className="space-y-3">
             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 px-1">Nome de Guerra</label>
             <div className="relative group">
@@ -96,6 +139,8 @@ const PremiumRegister: React.FC = () => {
               <input 
                 className="w-full h-16 rounded-2xl border border-border-dark bg-card-dark/50 pl-16 pr-6 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 outline-none transition-all text-sm font-bold placeholder:text-slate-700 backdrop-blur-sm"
                 placeholder="Seu Nome Completo"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 required
               />
             </div>
@@ -111,6 +156,8 @@ const PremiumRegister: React.FC = () => {
                 type="email" 
                 className="w-full h-16 rounded-2xl border border-border-dark bg-card-dark/50 pl-16 pr-6 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 outline-none transition-all text-sm font-bold placeholder:text-slate-700 backdrop-blur-sm"
                 placeholder="seu-email@elite.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -126,6 +173,8 @@ const PremiumRegister: React.FC = () => {
                 type="tel" 
                 className="w-full h-16 rounded-2xl border border-border-dark bg-card-dark/50 pl-16 pr-6 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 outline-none transition-all text-sm font-bold placeholder:text-slate-700 backdrop-blur-sm"
                 placeholder="(00) 00000-0000"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 required
               />
             </div>
@@ -134,8 +183,13 @@ const PremiumRegister: React.FC = () => {
           <div className="space-y-3">
              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 px-1">Caminho Desejado</label>
              <div className="relative">
-               <select className="w-full h-16 rounded-2xl border border-border-dark bg-card-dark pl-6 pr-10 focus:border-primary outline-none appearance-none text-sm font-bold tracking-tight text-white transition-all shadow-xl">
-                 <option disabled selected value="">Selecione uma modalidade</option>
+               <select 
+                 className="w-full h-16 rounded-2xl border border-border-dark bg-card-dark pl-6 pr-10 focus:border-primary outline-none appearance-none text-sm font-bold tracking-tight text-white transition-all shadow-xl"
+                 value={specialty}
+                 onChange={(e) => setSpecialty(e.target.value)}
+                 required
+               >
+                 <option disabled value="">Selecione uma modalidade</option>
                  <option value="karate">Karatê Do</option>
                  <option value="muay-thai">Muay Thai Elite</option>
                  <option value="kickboxing">Kickboxing Pro</option>
@@ -155,6 +209,8 @@ const PremiumRegister: React.FC = () => {
                 type={showPassword ? "text" : "password"} 
                 className="w-full h-16 rounded-2xl border border-border-dark bg-card-dark/50 pl-16 pr-16 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 outline-none transition-all text-sm font-bold placeholder:text-slate-700 backdrop-blur-sm"
                 placeholder="Crie sua Senha Forte"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <button 
@@ -171,10 +227,17 @@ const PremiumRegister: React.FC = () => {
             whileHover={{ scale: 1.02, backgroundColor: 'var(--primary)' }}
             whileTap={{ scale: 0.98 }}
             type="submit"
-            className="w-full h-16 bg-primary text-white font-black text-xs uppercase tracking-[0.4em] rounded-2xl shadow-xl shadow-primary/30 mt-10 relative overflow-hidden group border border-primary/20"
+            className="w-full h-16 bg-primary text-white font-black text-xs uppercase tracking-[0.4em] rounded-2xl shadow-xl shadow-primary/30 mt-10 relative overflow-hidden group border border-primary/20 flex items-center justify-center"
+            disabled={loading}
           >
-             <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-             Criar Perfil
+             {loading ? (
+               <div className="w-6 h-6 rounded-full border-2 border-white border-t-transparent animate-spin" />
+             ) : (
+               <>
+                 <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                 Criar Perfil
+               </>
+             )}
           </motion.button>
         </motion.form>
 
