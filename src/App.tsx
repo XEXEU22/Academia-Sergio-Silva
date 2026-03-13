@@ -19,6 +19,7 @@ import PremiumVideoUpload from './screens/PremiumVideoUpload';
 import PremiumAdminDashboard from './screens/PremiumAdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthCallback from './screens/AuthCallback';
+import PremiumAssetManagement from './screens/PremiumAssetManagement';
 
 export default function App() {
   return (
@@ -31,7 +32,11 @@ export default function App() {
           <Route path="/register" element={<PremiumRegister />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/forgot-password" element={<PremiumForgotPassword />} />
-          <Route path="/dashboard" element={<PremiumDashboard />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <PremiumDashboard />
+            </ProtectedRoute>
+          } />
           <Route path="/schedule" element={<PremiumSchedule />} />
           <Route path="/plans" element={<PremiumPlans />} />
           <Route path="/videos" element={<PremiumVideoGallery />} />
@@ -49,6 +54,11 @@ export default function App() {
           <Route path="/admin" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <PremiumAdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/assets" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <PremiumAssetManagement />
             </ProtectedRoute>
           } />
           {/* Fallback to welcome if not logged in (logic would go here in real app) */}

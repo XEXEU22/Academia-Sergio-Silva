@@ -21,12 +21,27 @@ const PremiumPhotoGallery: React.FC = () => {
   const [activeTab, setActiveTab] = useState('Recentes');
   const [loading, setLoading] = useState(true);
   const [photos, setPhotos] = useState<any[]>([]);
-  const fallbackImages = [
+  const [fallbackImages, setFallbackImages] = useState<string[]>([
     'https://images.unsplash.com/photo-1552072092-7f9b8d63efcb?q=80&w=800&auto=format&fit=crop',
     'https://images.unsplash.com/photo-1599058917212-d750089bc07e?q=80&w=800&auto=format&fit=crop',
     'https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop',
     'https://images.unsplash.com/photo-1517438476312-10d79c67750d?q=80&w=800&auto=format&fit=crop',
-  ];
+  ]);
+
+  useEffect(() => {
+    async function fetchFallbacks() {
+      const { data } = await supabase
+        .from('site_assets')
+        .select('url')
+        .ilike('asset_key', 'gallery_fallback_%')
+        .order('asset_key');
+      
+      if (data && data.length > 0) {
+        setFallbackImages(data.map(d => d.url));
+      }
+    }
+    fetchFallbacks();
+  }, []);
 
   useEffect(() => {
     async function fetchPhotos() {

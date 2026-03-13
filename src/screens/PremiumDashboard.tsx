@@ -127,9 +127,11 @@ const PremiumDashboard: React.FC = () => {
             Osu, {profile?.full_name?.split(' ')[0] || 'Guerreiro'}!
           </motion.h1>
           <motion.p variants={itemVariants} className="text-slate-400 max-w-xs text-sm leading-relaxed">
-            {profile?.role === 'admin' 
-              ? 'Pronto para gerenciar a academia e inspirar seus alunos?'
-              : `Você está a apenas ${profile?.experience_years ? 20 - profile.experience_years : 12} treinos de alcançar a sua próxima graduação.`
+            {!profile && loading === false 
+              ? 'Conectando ao seu perfil...' 
+              : profile?.role === 'admin' 
+                ? 'Pronto para gerenciar a academia e inspirar seus alunos?'
+                : `Você está a apenas ${profile?.experience_years ? 20 - profile.experience_years : 12} treinos de alcançar a sua próxima graduação.`
             }
           </motion.p>
         </section>

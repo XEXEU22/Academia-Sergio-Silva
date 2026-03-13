@@ -17,9 +17,24 @@ import {
   Crown
 } from '../icons';
 import BottomNav from '../components/BottomNav';
+import { supabase } from '../supabase';
 
 const PremiumHome: React.FC = () => {
   const navigate = useNavigate();
+  const [homeBanner, setHomeBanner] = React.useState('https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=1200&auto=format&fit=crop');
+
+  React.useEffect(() => {
+    const fetchBanner = async () => {
+      const { data } = await supabase
+        .from('site_assets')
+        .select('url')
+        .eq('asset_key', 'home_banner')
+        .single();
+      
+      if (data?.url) setHomeBanner(data.url);
+    };
+    fetchBanner();
+  }, []);
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -109,7 +124,7 @@ const PremiumHome: React.FC = () => {
              animate={{ scale: 1, opacity: 1 }}
              transition={{ duration: 1.5 }}
              className="absolute inset-0 bg-cover bg-top bg-no-repeat"
-             style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=1200&auto=format&fit=crop")' }}
+             style={{ backgroundImage: `url("${homeBanner}")` }}
            />
            {/* Gradiente para suavizar a transição com o fundo */}
            <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/20 to-transparent z-10" />

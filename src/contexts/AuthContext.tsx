@@ -49,40 +49,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      if (currentUser) {
-        fetchProfile(currentUser.id).finally(() => setLoading(false));
-      } else {
+    const setupInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        if (currentUser) {
+          await fetchProfile(currentUser.id);
+        }
+      } catch (err) {
+        console.error('Error in initial session setup:', err);
+      } finally {
         setLoading(false);
       }
-    });
+    };
+
+    setupInitialSession();
+
+    // Safety timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 8000); // 8 seconds safety cap
 
     // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      const currentUser = session?.user ?? null;
-      
-      // Update user state first for responsiveness
-      setUser(currentUser);
-      
-      if (currentUser) {
-        // If it's a new sign in or profile is missing, set loading
-        if (event === 'SIGNED_IN' || !profile) {
-          setLoading(true);
+      try {
+        setSession(session);
+        const currentUser = session?.user ?? null;
+        
+        // Update user state first for responsiveness
+        setUser(currentUser);
+        
+        if (currentUser) {
+          // If it's a new sign in or profile is missing, set loading
+          if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || !profile) {
+            setLoading(true);
+          }
+          await fetchProfile(currentUser.id);
+        } else {
+          setProfile(null);
+          localStorage.removeItem('user_profile');
         }
-        await fetchProfile(currentUser.id);
-        setLoading(false);
-      } else {
-        setProfile(null);
-        localStorage.removeItem('user_profile');
+      } catch (err) {
+        console.error('Error in auth state change:', err);
+      } finally {
         setLoading(false);
       }
     });
 
     return () => {
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { motion, AnimatePresence, Variants } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
@@ -23,11 +23,27 @@ const PremiumLogin: React.FC = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('remembered_email');
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Save/Remove remembered email before attempt so it persists even if login fails
+    if (rememberMe) {
+      localStorage.setItem('remembered_email', email);
+    } else {
+      localStorage.removeItem('remembered_email');
+    }
 
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email,
@@ -159,6 +175,33 @@ const PremiumLogin: React.FC = () => {
                 </AnimatePresence>
               </button>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between px-1">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <div className="relative flex items-center justify-center">
+                <input 
+                  type="checkbox" 
+                  className="peer h-5 w-5 appearance-none rounded-md border border-border-dark bg-card-dark/50 checked:bg-primary checked:border-primary transition-all cursor-pointer"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <div className="absolute text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none">
+                  <motion.svg 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="4" 
+                    className="w-3.5 h-3.5"
+                    initial={{ scale: 0.5 }}
+                    animate={rememberMe ? { scale: 1 } : { scale: 0.5 }}
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </motion.svg>
+                </div>
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-300 transition-colors">Lembrar-me</span>
+            </label>
           </div>
 
           <motion.button 
