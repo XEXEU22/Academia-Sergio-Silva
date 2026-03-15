@@ -19,8 +19,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (uid: string) => {
+  const fetchProfile = async (uid: string, isBackground = false) => {
     try {
+      // If we're not doing a background refresh, we might want to set loading
+      // but only if we don't have a profile yet (optimistic load)
+      if (!isBackground && !profile) {
+        setLoading(true);
+      }
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -28,21 +34,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
       
       if (error) throw error;
+      
       setProfile(data);
       // Cache the profile
       localStorage.setItem('user_profile', JSON.stringify(data));
     } catch (err) {
       console.error('Error fetching profile:', err);
-      // Don't clear profile if we have a cached version and fetch fails (offline/error)
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Load cached profile if available
+    // 1. Optimistic Load: Try to get profile from localStorage immediately
     const cachedProfile = localStorage.getItem('user_profile');
+    let hasOptimisticProfile = false;
     if (cachedProfile) {
       try {
-        setProfile(JSON.parse(cachedProfile));
+        const parsed = JSON.parse(cachedProfile);
+        setProfile(parsed);
+        hasOptimisticProfile = true;
+        // If we have a cached profile, we can stop the initial spinner earlier
+        setLoading(false);
       } catch (e) {
         console.error('Error parsing cached profile:', e);
       }
@@ -55,22 +68,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         const currentUser = session?.user ?? null;
         setUser(currentUser);
+        
         if (currentUser) {
-          await fetchProfile(currentUser.id);
+          // 2. Background Refresh: If we have an optimistic profile, fetch the latest in background
+          // Otherwise, fetch it normally (will show spinner)
+          await fetchProfile(currentUser.id, hasOptimisticProfile);
+        } else {
+          setLoading(false);
         }
       } catch (err) {
         console.error('Error in initial session setup:', err);
-      } finally {
         setLoading(false);
       }
     };
 
     setupInitialSession();
 
-    // Safety timeout to prevent infinite loading
+    // 3. Shorter Safety Timeout (3s instead of 8s)
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 8000); // 8 seconds safety cap
+    }, 3000);
 
     // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -78,22 +95,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         const currentUser = session?.user ?? null;
         
-        // Update user state first for responsiveness
         setUser(currentUser);
         
         if (currentUser) {
-          // If it's a new sign in or profile is missing, set loading
-          if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || !profile) {
+          // Only show loading if we don't have any profile data yet
+          if (!profile && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
             setLoading(true);
           }
-          await fetchProfile(currentUser.id);
+          await fetchProfile(currentUser.id, !!profile);
         } else {
           setProfile(null);
           localStorage.removeItem('user_profile');
+          setLoading(false);
         }
       } catch (err) {
         console.error('Error in auth state change:', err);
-      } finally {
         setLoading(false);
       }
     });
