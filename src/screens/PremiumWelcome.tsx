@@ -7,7 +7,8 @@ const PremiumWelcome: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-dark overflow-x-hidden text-slate-100 font-display">
+    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden text-slate-100 font-display">
+      <div className="site-bg-overlay" />
       {/* Background Hero Image with Overlay */}
       <div className="relative w-full h-[60vh] overflow-hidden">
         <motion.div 
@@ -15,7 +16,7 @@ const PremiumWelcome: React.FC = () => {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 2, ease: "easeOut" }}
           className="absolute inset-0 bg-center bg-no-repeat bg-cover"
-          style={{ backgroundImage: 'url("/artifacts/media__1773248113670.jpg")' }}
+          style={{ backgroundImage: 'url("/background_site.png")' }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/60 to-transparent" />
         
@@ -66,7 +67,7 @@ const PremiumWelcome: React.FC = () => {
           <motion.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate('/premium-register')}
+            onClick={() => navigate('/register')}
             className="group relative h-16 flex items-center justify-center rounded-2xl bg-primary text-white text-xs font-black shadow-[0_20px_40px_rgba(255,107,0,0.3)] hover:shadow-primary/50 transition-all uppercase tracking-[0.3em] overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -76,7 +77,7 @@ const PremiumWelcome: React.FC = () => {
           <motion.button 
             whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.05)' }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate('/premium-login')}
+            onClick={() => navigate('/login')}
             className="h-16 flex items-center justify-center rounded-2xl bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase tracking-[0.3em] backdrop-blur-md"
           >
             Login de Membro

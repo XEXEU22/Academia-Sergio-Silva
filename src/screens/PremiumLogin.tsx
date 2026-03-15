@@ -76,9 +76,11 @@ const PremiumLogin: React.FC = () => {
   };
 
   return (
-    <div className="bg-background-dark min-h-screen flex flex-col text-slate-100 font-display selection:bg-primary selection:text-white">
+    <div className="min-h-screen flex flex-col text-slate-100 font-display selection:bg-primary selection:text-white relative">
+      <div className="site-bg-overlay" />
       {/* Background Glows */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+         <div className="absolute inset-0 bg-cover bg-center opacity-10" style={{ backgroundImage: 'url("/background_site.png")' }} />
          <div className="absolute top-[-10%] right-[-10%] size-96 bg-primary/20 rounded-full blur-[120px] animate-pulse" />
          <div className="absolute bottom-[-10%] left-[-10%] size-96 bg-primary/10 rounded-full blur-[120px] animate-pulse duration-[5s]" />
       </div>

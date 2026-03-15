@@ -54,8 +54,17 @@ const PremiumRegister: React.FC = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       setLoading(false);
-      alert('Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta.');
-      navigate('/login');
+      
+      // Auto-login logic: check if signUp returned a session
+      if (data?.session) {
+        if (confirm('Cadastro realizado com sucesso! Deseja que o sistema lembre seus dados de acesso?')) {
+          localStorage.setItem('remembered_email', email);
+        }
+        navigate('/dashboard');
+      } else {
+        alert('Cadastro realizado com sucesso! Como a confirmação por e-mail está ativa no servidor, você precisará confirmar seu e-mail antes de acessar.');
+        navigate('/login');
+      }
     }
   };
 
@@ -77,7 +86,8 @@ const PremiumRegister: React.FC = () => {
   };
 
   return (
-    <div className="bg-background-dark min-h-screen flex flex-col text-slate-100 font-display selection:bg-primary selection:text-white">
+    <div className="min-h-screen flex flex-col text-slate-100 font-display selection:bg-primary selection:text-white relative">
+      <div className="site-bg-overlay" />
       {/* Background Hero with Dynamic Blur */}
       <div className="fixed top-0 left-0 w-full h-[50vh] overflow-hidden pointer-events-none z-0">
          <motion.div 
@@ -85,7 +95,7 @@ const PremiumRegister: React.FC = () => {
            animate={{ scale: 1, opacity: 0.3 }}
            transition={{ duration: 2, ease: "easeOut" }}
            className="w-full h-full bg-center bg-cover"
-           style={{ backgroundImage: 'url("/artifacts/jiujitsu_training_1773243516160.png")' }}
+           style={{ backgroundImage: 'url("/background_site.png")' }}
          />
          <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/40 to-transparent" />
          

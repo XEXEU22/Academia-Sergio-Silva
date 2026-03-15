@@ -73,7 +73,8 @@ const PremiumHome: React.FC = () => {
   ];
 
   return (
-    <div className="bg-background-dark min-h-screen flex flex-col text-slate-100 font-display">
+    <div className="min-h-screen flex flex-col text-slate-100 font-display relative">
+      <div className="site-bg-overlay" />
       {/* Dynamic Glass Header */}
       <header className="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-border-dark">
         <div className="flex items-center gap-3">
@@ -123,8 +124,8 @@ const PremiumHome: React.FC = () => {
              initial={{ scale: 1.1, opacity: 0 }}
              animate={{ scale: 1, opacity: 1 }}
              transition={{ duration: 1.5 }}
-             className="absolute inset-0 bg-cover bg-top bg-no-repeat"
-             style={{ backgroundImage: `url("${homeBanner}")` }}
+             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+             style={{ backgroundImage: 'url("/background_site.png")' }}
            />
            {/* Gradiente para suavizar a transição com o fundo */}
            <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/20 to-transparent z-10" />

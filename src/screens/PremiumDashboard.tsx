@@ -58,7 +58,8 @@ const PremiumDashboard: React.FC = () => {
   const isAdmin = profile?.role === 'admin' || profile?.role === 'instructor';
 
   return (
-    <div className="bg-background-dark min-h-screen flex flex-col text-slate-100 font-display selection:bg-primary selection:text-white">
+    <div className="min-h-screen flex flex-col text-slate-100 font-display selection:bg-primary selection:text-white relative">
+      <div className="site-bg-overlay" />
       {/* Premium Gradient Header */}
       <header className="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-border-dark">
         <div className="flex items-center gap-3">
