@@ -21,8 +21,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = async (uid: string, isBackground = false) => {
     try {
-      // If we're not doing a background refresh, we might want to set loading
-      // but only if we don't have a profile yet (optimistic load)
       if (!isBackground && !profile) {
         setLoading(true);
       }
@@ -31,17 +29,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('id', uid)
-        .single();
+        .maybeSingle(); // Changed from .single() to .maybeSingle() to handle missing profiles gracefully
       
       if (error) throw error;
       
-      setProfile(data);
-      // Cache the profile
-      localStorage.setItem('user_profile', JSON.stringify(data));
+      if (data) {
+        setProfile(data);
+        localStorage.setItem('user_profile', JSON.stringify(data));
+      } else {
+        // Fallback: if no profile found, set a basic one to avoid breaking the UI
+        console.warn('Profile not found for user:', uid);
+        const fallbackProfile = { 
+          id: uid, 
+          full_name: user?.email?.split('@')[0] || 'Guerreiro', 
+          role: 'student' 
+        };
+        setProfile(fallbackProfile);
+      }
     } catch (err) {
       console.error('Error fetching profile:', err);
     } finally {
-      setLoading(false);
+      if (!isBackground) {
+        setLoading(false);
+      }
     }
   };
 

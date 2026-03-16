@@ -55,14 +55,15 @@ const PremiumRegister: React.FC = () => {
     } else {
       setLoading(false);
       
-      // Auto-login logic: check if signUp returned a session
+      // Check if email confirmation is required (session will be null)
       if (data?.session) {
         if (confirm('Cadastro realizado com sucesso! Deseja que o sistema lembre seus dados de acesso?')) {
           localStorage.setItem('remembered_email', email);
         }
         navigate('/dashboard');
       } else {
-        alert('Cadastro realizado com sucesso! Como a confirmação por e-mail está ativa no servidor, você precisará confirmar seu e-mail antes de acessar.');
+        // More descriptive success for when email confirmation is ON
+        alert('Cadastro realizado com sucesso! \n\nIMPORTANTE: Verifique seu e-mail para ativar sua conta. O acesso só será liberado após a confirmação no link enviado para ' + email + '.');
         navigate('/login');
       }
     }
@@ -81,7 +82,7 @@ const PremiumRegister: React.FC = () => {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: 'spring', stiffness: 100 }
+      transition: { type: 'spring' as const, stiffness: 100 }
     }
   };
 
