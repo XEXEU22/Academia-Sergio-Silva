@@ -259,7 +259,7 @@ const PremiumSchedule: React.FC = () => {
                  <p className="text-sm font-black text-white">12 Aulas Disponíveis</p>
               </div>
               <button 
-                onClick={() => navigate('/premium-plans')}
+                onClick={() => navigate('/plans')}
                 className="h-12 px-6 bg-white text-background-dark rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-transform"
               >
                  Planos

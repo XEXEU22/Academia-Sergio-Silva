@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, Variants } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, 
@@ -28,12 +28,12 @@ const PremiumNotificationSettings: React.FC = () => {
     setToggleStates(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { x: -20, opacity: 0 },
     visible: { x: 0, opacity: 1, transition: { type: 'spring', stiffness: 100 } }
   };
@@ -42,14 +42,14 @@ const PremiumNotificationSettings: React.FC = () => {
     { key: 'training', label: 'Lembretes de Treino', icon: Zap, color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
     { key: 'payment', label: 'Alertas de Mensalidade', icon: Trophy, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
     { key: 'community', label: 'Novidades da Comunidade', icon: Shield, color: 'text-primary bg-primary/10 border-primary/20' },
-    { key: 'push', label: 'Notificações Push', icon: Smartphone, color: 'text-slate-400 bg-slate-900 border-white/5' },
-    { key: 'email', label: 'E-mail Marketing', icon: Mail, color: 'text-slate-400 bg-slate-900 border-white/5' }
+    { key: 'push', label: 'Notificações Push', icon: Smartphone, color: 'text-slate-400 bg-card-dark border-border-dark' },
+    { key: 'email', label: 'E-mail Marketing', icon: Mail, color: 'text-slate-400 bg-card-dark border-border-dark' }
   ];
 
   return (
-    <div className="bg-slate-950 min-h-screen flex flex-col text-slate-100 font-display">
-      <header className="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-white/5 backdrop-blur-3xl">
-        <button onClick={() => navigate(-1)} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">
+    <div className="bg-background-dark min-h-screen flex flex-col text-slate-100 font-display">
+      <header className="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-border-dark backdrop-blur-3xl">
+        <button onClick={() => navigate(-1)} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-border-dark transition-colors">
           <ChevronLeft size={20} />
         </button>
         <h2 className="text-[10px] font-black tracking-[0.4em] uppercase text-slate-500">Configuração de Alertas</h2>
@@ -76,7 +76,7 @@ const PremiumNotificationSettings: React.FC = () => {
                   key={i} 
                   variants={itemVariants}
                   whileHover={{ x: 5 }}
-                  className="p-6 rounded-[2.5rem] bg-slate-900 border border-white/5 flex items-center justify-between group transition-all shadow-xl"
+                  className="p-6 rounded-[2.5rem] bg-card-dark border border-border-dark flex items-center justify-between group transition-all shadow-xl"
                 >
                    <div className="flex items-center gap-5">
                       <div className={`size-14 rounded-2xl flex items-center justify-center border transition-all group-hover:scale-110 ${item.color}`}>
@@ -102,7 +102,7 @@ const PremiumNotificationSettings: React.FC = () => {
         {/* Support Section Tile */}
         <motion.section 
           variants={itemVariants}
-          className="p-8 rounded-[3rem] bg-slate-900 border border-white/5 text-center flex flex-col items-center gap-6"
+          className="p-8 rounded-[3rem] bg-card-dark border border-border-dark text-center flex flex-col items-center gap-6"
         >
            <div className="size-16 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shadow-xl shadow-indigo-500/5">
               <Shield size={28} />
