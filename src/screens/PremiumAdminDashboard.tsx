@@ -14,7 +14,9 @@ import {
   Star,
   Clock,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  Image as ImageIcon,
+  Calendar
 } from '../icons';
 import BottomNav from '../components/BottomNav';
 import { useAuth } from '../contexts/AuthContext';
@@ -39,7 +41,8 @@ const PremiumAdminDashboard: React.FC = () => {
   const adminActions = [
     { title: 'Vídeos', icon: Video, desc: 'Gerenciar galeria digital', path: '/upload-video', color: 'bg-indigo-500/10 text-indigo-400' },
     { title: 'Imagens', icon: ImageIcon, desc: 'Alterar fotos do site', path: '/admin/assets', color: 'bg-primary/10 text-primary' },
-    { title: 'Alunos', icon: Users, desc: 'Lista de membros e graduação', color: 'bg-emerald-500/10 text-emerald-400' },
+    { title: 'Alunos', icon: Users, desc: 'Lista de membros e graduação', path: '/admin/students', color: 'bg-emerald-500/10 text-emerald-400' },
+    { title: 'Agenda', icon: Calendar, desc: 'Gerenciar aulas e horários', path: '/admin/schedule', color: 'bg-pink-500/10 text-pink-400' },
     { title: 'Relatórios', icon: Zap, desc: 'Estatísticas de uso', color: 'bg-amber-500/10 text-amber-400' },
     { title: 'Configurações', icon: Settings, desc: 'Ajustes do sistema', color: 'bg-slate-500/10 text-slate-400' },
   ];
