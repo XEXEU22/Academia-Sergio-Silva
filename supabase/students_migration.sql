@@ -1,0 +1,8 @@
+ALTER TABLE public."profiles" ADD COLUMN IF NOT EXISTS enrollment_date DATE,
+  ADD COLUMN IF NOT EXISTS plan_name TEXT,
+  ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'pending',
+  ADD COLUMN IF NOT EXISTS last_payment_date DATE,
+  ADD COLUMN IF NOT EXISTS next_payment_date DATE,
+  ADD COLUMN IF NOT EXISTS modality TEXT,
+  ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true,
+  ADD COLUMN IF NOT EXISTS notes TEXT;
