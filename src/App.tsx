@@ -20,58 +20,57 @@ import PremiumAdminDashboard from './screens/PremiumAdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthCallback from './screens/AuthCallback';
 import PremiumAssetManagement from './screens/PremiumAssetManagement';
-import PremiumStudentManagement from './screens/PremiumStudentManagement';
+import PremiumAdminStudents from './screens/PremiumAdminStudents';
 
 export default function App() {
-    return (
-          <AuthProvider>
-                <Router>
-                        <Routes>
-                                  <Route path="/" element={<PremiumHome />} />
-                                  <Route path="/welcome" element={<PremiumWelcome />} />
-                                  <Route path="/login" element={<PremiumLogin />} />
-                                  <Route path="/register" element={<PremiumRegister />} />
-                                  <Route path="/auth/callback" element={<AuthCallback />} />
-                                  <Route path="/forgot-password" element={<PremiumForgotPassword />} />
-                                  <Route path="/dashboard" element={
-                                                <ProtectedRoute>
-                                                              <PremiumDashboard />
-                                                </ProtectedRoute>ProtectedRoute>
-                                    } />
-                                            <Route path="/schedule" element={<PremiumSchedule />} />
-                                            <Route path="/plans" element={<PremiumPlans />} />
-                                            <Route path="/videos" element={<PremiumVideoGallery />} />
-                                            <Route path="/gallery" element={<PremiumPhotoGallery />} />
-                                            <Route path="/instructor" element={<PremiumInstructorProfile />} />
-                                            <Route path="/notifications" element={<PremiumNotifications />} />
-                                            <Route path="/settings" element={<PremiumNotificationSettings />} />
-                                            <Route path="/change-password" element={<PremiumChangePassword />} />
-                                            <Route path="/payment-success" element={<PremiumPaymentSuccess />} />
-                                            <Route path="/upload-video" element={
-                                                          <ProtectedRoute allowedRoles={['admin', 'instructor']}>
-                                                                        <PremiumVideoUpload />
-                                                          </ProtectedRoute>ProtectedRoute>
-                                              } />
-                                                      <Route path="/admin" element={
-                                                                    <ProtectedRoute allowedRoles={['admin']}>
-                                                                                  <PremiumAdminDashboard />
-                                                                    </ProtectedRoute>ProtectedRoute>
-                                                        } />
-                                                                <Route path="/admin/assets" element={
-                                                                              <ProtectedRoute allowedRoles={['admin']}>
-                                                                                            <PremiumAssetManagement />
-                                                                              </ProtectedRoute>ProtectedRoute>
-                                                                  } />
-                                                                          <Route path="/admin/students" element={
-                                                                                        <ProtectedRoute allowedRoles={['admin']}>
-                                                                                                      <PremiumStudentManagement />
-                                                                                          </ProtectedRoute>ProtectedRoute>
-                                                                            } />
-                                                                            {/* Fallback to welcome if not logged in (logic would go here in real app) */}
-                                                                                    <Route path="*" element={<Navigate to="/welcome" replace />} />
-                                                                          </Route>Routes>
-                                                                </Route>Router>
-                                                      </Route>AuthProvider>
-                                              );
-                                              }
-                                            </AuthProvider>
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<PremiumHome />} />
+          <Route path="/welcome" element={<PremiumWelcome />} />
+          <Route path="/login" element={<PremiumLogin />} />
+          <Route path="/register" element={<PremiumRegister />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/forgot-password" element={<PremiumForgotPassword />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <PremiumDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/schedule" element={<PremiumSchedule />} />
+          <Route path="/plans" element={<PremiumPlans />} />
+          <Route path="/videos" element={<PremiumVideoGallery />} />
+          <Route path="/gallery" element={<PremiumPhotoGallery />} />
+          <Route path="/instructor" element={<PremiumInstructorProfile />} />
+          <Route path="/notifications" element={<PremiumNotifications />} />
+          <Route path="/settings" element={<PremiumNotificationSettings />} />
+          <Route path="/change-password" element={<PremiumChangePassword />} />
+          <Route path="/payment-success" element={<PremiumPaymentSuccess />} />
+          <Route path="/upload-video" element={
+            <ProtectedRoute allowedRoles={['admin', 'instructor']}>
+              <PremiumVideoUpload />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <PremiumAdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/assets" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <PremiumAssetManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/students" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <PremiumAdminStudents />
+            </ProtectedRoute>
+          } />
+          {/* Fallback to welcome if not logged in (logic would go here in real app) */}
+          <Route path="*" element={<Navigate to="/welcome" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
+}
