@@ -77,7 +77,8 @@ import {
   BarChart,
   Edit3,
   ShieldAlert,
-  DollarSign
+  DollarSign,
+  UserCheck
 } from 'lucide-react';
 
 // Export all icons for use throughout the app
@@ -160,5 +161,6 @@ export {
   BarChart,
   Edit3,
   ShieldAlert,
-  DollarSign
+  DollarSign,
+  UserCheck
 };
