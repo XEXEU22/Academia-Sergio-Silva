@@ -74,7 +74,11 @@ import {
   Youtube,
   Save,
   Link,
-  BarChart
+  BarChart,
+  DollarSign,
+  Edit3,
+  UserCheck,
+  XCircle
 } from 'lucide-react';
 
 // Export all icons for use throughout the app
@@ -154,5 +158,9 @@ export {
   Youtube,
   Save,
   Link,
-  BarChart
+  BarChart,
+  DollarSign,
+  Edit3,
+  UserCheck,
+  XCircle
 };

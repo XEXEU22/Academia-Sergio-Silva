@@ -20,6 +20,7 @@ import PremiumAdminDashboard from './screens/PremiumAdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthCallback from './screens/AuthCallback';
 import PremiumAssetManagement from './screens/PremiumAssetManagement';
+import PremiumStudentManagement from './screens/PremiumStudentManagement';
 
 export default function App() {
   return (
@@ -59,6 +60,11 @@ export default function App() {
           <Route path="/admin/assets" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <PremiumAssetManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/students" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <PremiumStudentManagement />
             </ProtectedRoute>
           } />
           {/* Fallback to welcome if not logged in (logic would go here in real app) */}
