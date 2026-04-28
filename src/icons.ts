@@ -75,10 +75,9 @@ import {
   Save,
   Link,
   BarChart,
-  DollarSign,
   Edit3,
-  UserCheck,
-  XCircle
+  ShieldAlert,
+  DollarSign
 } from 'lucide-react';
 
 // Export all icons for use throughout the app
@@ -159,8 +158,7 @@ export {
   Save,
   Link,
   BarChart,
-  DollarSign,
   Edit3,
-  UserCheck,
-  XCircle
+  ShieldAlert,
+  DollarSign
 };

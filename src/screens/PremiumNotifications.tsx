@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion, Variants } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, 
@@ -19,27 +19,27 @@ const PremiumNotifications: React.FC = () => {
   const navigate = useNavigate();
 
   const notifications = [
-    { type: 'Treino', title: 'Domínio do Tatame', time: 'Agira', desc: 'Uma nova aula de técnica avançada foi adicionada ao seu cronograma de combate.', icon: Zap, priority: true },
+    { type: 'Treino', title: 'Domínio do Tatame', time: 'Agora', desc: 'Uma nova aula de técnica avançada foi adicionada ao seu cronograma de combate.', icon: Zap, priority: true },
     { type: 'Finanças', title: 'Mensalidade Elite', time: '2h atrás', desc: 'Sua assinatura Guerreiro será renovada em 48 horas. Mantenha seu legado ativo.', icon: Trophy, priority: false },
     { type: 'Evento', title: 'Seminário de Mestres', time: '5h atrás', desc: 'Inscrições abertas para o Workshop com o Grande Mestre Silva.', icon: Target, priority: true },
     { type: 'Sistema', title: 'Segurança Fortalecida', time: '1d atrás', desc: 'Sua senha foi atualizada com sucesso no centro de comando.', icon: CheckCircle2, priority: false },
   ];
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { x: -20, opacity: 0 },
     visible: { x: 0, opacity: 1, transition: { type: 'spring', stiffness: 100 } }
   };
 
   return (
-    <div className="bg-slate-950 min-h-screen flex flex-col text-slate-100 font-display">
-      <header className="glass sticky top-0 z-50 px-6 py-4 border-b border-white/5">
+    <div className="bg-background-dark min-h-screen flex flex-col text-slate-100 font-display">
+      <header className="glass sticky top-0 z-50 px-6 py-4 border-b border-border-dark">
         <div className="flex items-center justify-between mb-6">
-          <button onClick={() => navigate(-1)} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">
+          <button onClick={() => navigate(-1)} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-border-dark transition-colors">
             <ChevronLeft size={20} />
           </button>
           <h2 className="text-[10px] font-black tracking-[0.4em] uppercase text-slate-500">Centro de Mensagens</h2>
@@ -53,7 +53,7 @@ const PremiumNotifications: React.FC = () => {
         
         <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
            {['Tudo', 'Treinos', 'Financeiro', 'Alertas'].map((tab, i) => (
-             <button key={tab} className={`h-10 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${i === 0 ? 'bg-white text-slate-950 border-white' : 'bg-slate-900 border-white/5 text-slate-500 hover:text-white'}`}>
+             <button key={tab} className={`h-10 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${i === 0 ? 'bg-primary border-primary text-white shadow-xl shadow-primary/20' : 'bg-card-dark border-border-dark text-slate-500 hover:text-white'}`}>
                 {tab}
              </button>
            ))}
@@ -79,7 +79,7 @@ const PremiumNotifications: React.FC = () => {
             key={i} 
             variants={itemVariants}
             whileHover={{ x: 5, backgroundColor: 'rgba(255,255,255,0.02)' }}
-            className={`group relative flex gap-5 p-6 rounded-[2rem] border transition-all ${notif.priority ? 'bg-slate-900 border-primary/20 shadow-xl shadow-primary/5' : 'bg-slate-900/40 border-white/5 outline-none'}`}
+            className={`group relative flex gap-5 p-6 rounded-[2rem] border transition-all ${notif.priority ? 'bg-card-dark/80 border-primary/20 shadow-xl shadow-primary/5' : 'bg-card-dark border-border-dark outline-none'}`}
           >
             {notif.priority && <div className="absolute top-4 right-4 size-2 bg-primary rounded-full animate-ping" />}
             

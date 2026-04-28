@@ -10,7 +10,8 @@ import {
   Share2,
   Heart,
   Grid,
-  Filter
+  Filter,
+  X
 } from '../icons';
 import BottomNav from '../components/BottomNav';
 import { supabase } from '../supabase';
@@ -195,7 +196,7 @@ const PremiumPhotoGallery: React.FC = () => {
               <h3 className="text-lg font-black tracking-widest uppercase mb-2">Contribua com a Galeria</h3>
               <p className="text-slate-500 text-xs font-medium">Capture momentos do Tatame e compartilhe com a comunidade.</p>
            </div>
-           <button className="px-8 py-4 bg-white text-background-dark rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-transform">
+           <button className="px-8 py-4 bg-white text-background-dark rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-transform font-bold">
               Enviar Mídia
            </button>
         </motion.section>
@@ -214,10 +215,10 @@ const PremiumPhotoGallery: React.FC = () => {
              <motion.button 
                initial={{ scale: 0 }}
                animate={{ scale: 1 }}
-               className="absolute top-8 right-8 z-20 p-4 rounded-full bg-white/5 border border-border-dark text-white"
+               className="absolute top-8 right-8 z-20 p-4 rounded-full bg-white/5 border border-border-dark text-white hover:bg-white/10 transition-colors"
                onClick={() => setSelectedPhoto(null)}
              >
-                <Maximize2 size={24} className="rotate-45" />
+                <X size={24} />
              </motion.button>
              
              <motion.img 

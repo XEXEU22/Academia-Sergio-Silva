@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, Variants } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, 
@@ -22,20 +22,20 @@ const PremiumChangePassword: React.FC = () => {
     setShowPass(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100 } }
   };
 
   return (
-    <div className="bg-slate-950 min-h-screen flex flex-col text-slate-100 font-display">
-      <header className="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-white/5 backdrop-blur-3xl">
-        <button onClick={() => navigate(-1)} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">
+    <div className="bg-background-dark min-h-screen flex flex-col text-slate-100 font-display">
+      <header className="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-border-dark backdrop-blur-3xl">
+        <button onClick={() => navigate(-1)} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-border-dark transition-colors">
           <ChevronLeft size={20} />
         </button>
         <h2 className="text-[10px] font-black tracking-[0.4em] uppercase text-slate-500">Comando de Segurança</h2>
@@ -72,7 +72,7 @@ const PremiumChangePassword: React.FC = () => {
               </div>
               <input 
                 type={showPass.current ? "text" : "password"} 
-                className="w-full h-16 rounded-2xl border border-white/5 bg-slate-900/50 pl-16 pr-16 focus:border-primary/50 outline-none transition-all text-sm font-bold placeholder:text-slate-700 backdrop-blur-sm"
+                className="w-full h-16 rounded-2xl border border-border-dark bg-card-dark/50 pl-16 pr-16 focus:border-primary/50 outline-none transition-all text-sm font-bold placeholder:text-slate-700 backdrop-blur-sm"
                 placeholder="Sua senha de agora"
               />
               <button 
@@ -94,7 +94,7 @@ const PremiumChangePassword: React.FC = () => {
               </div>
               <input 
                 type={showPass.new ? "text" : "password"} 
-                className="w-full h-16 rounded-2xl border border-white/5 bg-slate-900/50 pl-16 pr-16 focus:border-primary/50 outline-none transition-all text-sm font-bold placeholder:text-slate-700 backdrop-blur-sm"
+                className="w-full h-16 rounded-2xl border border-border-dark bg-card-dark/50 pl-16 pr-16 focus:border-primary/50 outline-none transition-all text-sm font-bold placeholder:text-slate-700 backdrop-blur-sm"
                 placeholder="Crie seu novo segredo"
               />
               <button 

@@ -16,7 +16,10 @@ import {
   Users,
   Shield,
   Zap,
-  Target
+  Target,
+  Grid,
+  Filter,
+  X
 } from '../icons';
 import BottomNav from '../components/BottomNav';
 
@@ -150,7 +153,7 @@ const PremiumInstructorProfile: React.FC = () => {
                    <div className="absolute -right-2 -bottom-2 opacity-10 group-hover:scale-150 transition-transform">
                       <skill.icon size={48} />
                    </div>
-                   <p className="text-xs font-black uppercase tracking-widest">{skill.label}</p>
+                    <p className="text-xs font-black uppercase tracking-widest">{skill.label}</p>
                    <div className="flex items-center justify-between">
                       <span className="text-[10px] font-bold opacity-60">Mastery</span>
                       <span className="text-[10px] font-black">{skill.level}</span>
@@ -174,7 +177,7 @@ const PremiumInstructorProfile: React.FC = () => {
               <Calendar className="text-primary" size={20} />
               Agenda Próxima
             </h3>
-            <button className="text-primary text-[10px] font-black uppercase tracking-widest" onClick={() => navigate('/premium-schedule')}>Abrir Calendário</button>
+            <button className="text-primary text-[10px] font-black uppercase tracking-widest" onClick={() => navigate('/schedule')}>Abrir Calendário</button>
           </div>
           
           <div className="space-y-4">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion, Variants } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
   CheckCircle2, 
@@ -16,7 +16,7 @@ import {
 const PremiumPaymentSuccess: React.FC = () => {
   const navigate = useNavigate();
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0, scale: 0.9 },
     visible: { 
       opacity: 1, 
@@ -28,13 +28,13 @@ const PremiumPaymentSuccess: React.FC = () => {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1 }
   };
 
   return (
-    <div className="bg-slate-950 min-h-screen flex items-center justify-center p-6 font-display relative overflow-hidden">
+    <div className="bg-background-dark min-h-screen flex items-center justify-center p-6 font-display relative overflow-hidden">
       {/* Dynamic Background Effects */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-primary/5 rounded-full blur-[140px] animate-pulse pointer-events-none" />
       
@@ -42,7 +42,7 @@ const PremiumPaymentSuccess: React.FC = () => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="max-w-md w-full bg-slate-900 rounded-[3.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.6)] border border-white/5 relative z-10 overflow-hidden"
+        className="max-w-md w-full bg-card-dark rounded-[3.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.6)] border border-border-dark relative z-10 overflow-hidden"
       >
         <div className="pt-16 pb-12 flex flex-col items-center text-center px-8 relative">
           <motion.div 
@@ -65,7 +65,7 @@ const PremiumPaymentSuccess: React.FC = () => {
         {/* Transaction Receipt Card */}
         <motion.div 
           variants={itemVariants}
-          className="mx-6 p-8 rounded-[2.5rem] bg-slate-950/50 border border-white/5 shadow-inner"
+          className="mx-6 p-8 rounded-[2.5rem] bg-background-dark/50 border border-border-dark shadow-inner"
         >
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-2">
@@ -91,7 +91,7 @@ const PremiumPaymentSuccess: React.FC = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Método</span>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 rounded-xl border border-white/5">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-card-dark rounded-xl border border-border-dark">
                   <CreditCard className="text-primary" size={14} />
                   <span className="text-[10px] font-bold text-slate-300 tracking-tighter">VISA •••• 9928</span>
                 </div>
@@ -120,7 +120,7 @@ const PremiumPaymentSuccess: React.FC = () => {
           <motion.button 
             whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.03)' }}
             whileTap={{ scale: 0.98 }}
-            className="w-full bg-transparent text-slate-500 font-black py-4 rounded-[1.5rem] transition-all flex items-center justify-center gap-3 border border-white/5 group"
+            className="w-full bg-transparent text-slate-500 font-black py-4 rounded-[1.5rem] transition-all flex items-center justify-center gap-3 border border-border-dark group"
           >
             <Receipt size={18} className="group-hover:text-primary transition-colors" />
             <span className="text-[9px] uppercase tracking-widest">Recibo de Investimento</span>
