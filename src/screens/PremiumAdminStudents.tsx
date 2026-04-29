@@ -22,7 +22,9 @@ import {
   Plus,
   Banknote,
   Wallet,
-  Users
+  Users,
+  RefreshCw,
+  TrendingUp
 } from '../icons';
 import BottomNav from '../components/BottomNav';
 
@@ -105,6 +107,37 @@ function statusBadge(status: string | null) {
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  Main Component                                                           */
 /* ────────────────────────────────────────────────────────────────────────── */
+function getInitialsColor(name: string | null) {
+  const colors = [
+    'from-red-500 to-rose-600','from-orange-500 to-amber-600','from-yellow-500 to-orange-500',
+    'from-emerald-500 to-teal-600','from-teal-500 to-cyan-600','from-cyan-500 to-blue-600',
+    'from-blue-500 to-indigo-600','from-indigo-500 to-violet-600','from-violet-500 to-purple-600',
+    'from-purple-500 to-pink-600','from-pink-500 to-rose-600','from-lime-500 to-green-600'
+  ];
+  if (!name) return colors[0];
+  const idx = name.charCodeAt(0) % colors.length;
+  return colors[idx];
+}
+
+function getInitials(name: string | null) {
+  if (!name) return '?';
+  const parts = name.trim().split(' ');
+  return parts.length >= 2 ? (parts[0][0] + parts[parts.length-1][0]).toUpperCase() : parts[0].slice(0,2).toUpperCase();
+}
+
+function getDaysUntilPayment(dateStr: string | null): { days: number; label: string; color: string } | null {
+  if (!dateStr) return null;
+  const due = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  due.setHours(0,0,0,0);
+  const diff = Math.round((due.getTime() - today.getTime()) / 86400000);
+  if (diff < 0) return { days: diff, label: `Atrasado ${Math.abs(diff)}d`, color: 'text-red-400' };
+  if (diff === 0) return { days: 0, label: 'Vence hoje', color: 'text-amber-400' };
+  if (diff <= 5) return { days: diff, label: `Vence em ${diff}d`, color: 'text-amber-400' };
+  return { days: diff, label: `Vence em ${diff}d`, color: 'text-slate-500' };
+}
+
 export default function PremiumAdminStudents() {
   const navigate = useNavigate();
   const [students, setStudents] = useState<StudentProfile[]>([]);
@@ -112,7 +145,15 @@ export default function PremiumAdminStudents() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<TabFilter>('todos');
-  
+  const [modalityFilter, setModalityFilter] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'enrollment' | 'payment'>('name');
+  const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
+
+  const showToast = (msg: string, type: 'ok' | 'err' = 'ok') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   // Detail / Edit modal
   const [selectedStudent, setSelectedStudent] = useState<StudentProfile | null>(null);
   const [detailTab, setDetailTab] = useState<'info' | 'pagamentos' | 'aulas'>('info');
@@ -204,19 +245,28 @@ export default function PremiumAdminStudents() {
 
   /* ───── Filters ───── */
   const filteredStudents = useMemo(() => {
-    let list = students.filter(s => 
+    let list = students.filter(s =>
       (s.full_name || '').toLowerCase().includes(search.toLowerCase()) ||
       (s.belt_level || '').toLowerCase().includes(search.toLowerCase()) ||
       (s.modality || '').toLowerCase().includes(search.toLowerCase())
     );
-    
+    if (modalityFilter) list = list.filter(s => s.modality === modalityFilter);
     switch(activeTab) {
       case 'pagos': list = list.filter(s => s.payment_status === 'paid'); break;
       case 'pendentes': list = list.filter(s => !s.payment_status || s.payment_status === 'pending'); break;
       case 'atrasados': list = list.filter(s => s.payment_status === 'overdue'); break;
     }
+    list = [...list].sort((a, b) => {
+      if (sortBy === 'name') return (a.full_name||'').localeCompare(b.full_name||'');
+      if (sortBy === 'enrollment') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sortBy === 'payment') {
+        const order = { overdue: 0, pending: 1, paid: 2 };
+        return (order[a.payment_status as keyof typeof order] ?? 1) - (order[b.payment_status as keyof typeof order] ?? 1);
+      }
+      return 0;
+    });
     return list;
-  }, [students, search, activeTab]);
+  }, [students, search, activeTab, modalityFilter, sortBy]);
 
   const stats = useMemo(() => ({
     total: students.length,
@@ -291,9 +341,10 @@ export default function PremiumAdminStudents() {
       await fetchData();
       setSelectedStudent(null);
       setEditingStudent(null);
+      showToast('Aluno atualizado com sucesso!');
     } catch(err) {
       console.error('Erro ao salvar aluno:', err);
-      alert('Erro ao salvar os dados. Verifique a conexão e as permissões RLS.');
+      showToast('Erro ao salvar. Verifique a conexão.', 'err');
     } finally {
       setSaving(false);
     }
@@ -368,6 +419,12 @@ export default function PremiumAdminStudents() {
   /* ────────────────────────────────────────────────────────────────────────── */
   return (
     <div className="bg-background-dark min-h-screen flex flex-col text-slate-100 font-display">
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[200] px-5 py-3 rounded-2xl text-xs font-black shadow-2xl transition-all ${
+          toast.type === 'ok' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
+        }`}>{toast.msg}</div>
+      )}
       {/* ───── Header ───── */}
       <header className="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-border-dark">
         <button onClick={() => navigate(-1)} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">
@@ -377,38 +434,67 @@ export default function PremiumAdminStudents() {
           <h2 className="text-[10px] font-black tracking-[0.4em] uppercase text-slate-500">Gestão Admin</h2>
           <span className="text-[8px] font-black uppercase text-primary">Controle de Alunos</span>
         </div>
-        <div className="size-10" />
+        <button onClick={fetchData} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">
+          <RefreshCw size={18} className={loading ? 'animate-spin text-primary' : 'text-slate-400'} />
+        </button>
       </header>
 
       <main className="flex-1 px-6 pt-8 pb-32">
         {/* ───── Stats Cards ───── */}
         <div className="grid grid-cols-4 gap-3 mb-8">
           {[
-            { label: 'Total', val: stats.total, color: 'text-white', bg: 'bg-white/5 border-white/10' },
-            { label: 'Pagos', val: stats.paid, color: 'text-emerald-400', bg: 'bg-emerald-500/5 border-emerald-500/15' },
-            { label: 'Pendentes', val: stats.pending, color: 'text-amber-400', bg: 'bg-amber-500/5 border-amber-500/15' },
-            { label: 'Atrasados', val: stats.overdue, color: 'text-red-400', bg: 'bg-red-500/5 border-red-500/15' },
+            { label: 'Total', val: stats.total, color: 'text-white', bg: 'bg-white/5 border-white/10', tab: 'todos' as TabFilter },
+            { label: 'Pagos', val: stats.paid, color: 'text-emerald-400', bg: 'bg-emerald-500/5 border-emerald-500/15', tab: 'pagos' as TabFilter },
+            { label: 'Pendentes', val: stats.pending, color: 'text-amber-400', bg: 'bg-amber-500/5 border-amber-500/15', tab: 'pendentes' as TabFilter },
+            { label: 'Atrasados', val: stats.overdue, color: 'text-red-400', bg: 'bg-red-500/5 border-red-500/15', tab: 'atrasados' as TabFilter },
           ].map((s, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i*0.05 }}
-              className={`text-center py-4 rounded-2xl border ${s.bg}`}
+            <motion.button key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i*0.05 }}
+              onClick={() => setActiveTab(s.tab)}
+              className={`w-full text-center py-4 rounded-2xl border transition-all ${s.bg} ${
+                activeTab === s.tab ? 'ring-2 ring-white/20 scale-105' : 'hover:scale-102'
+              }`}
             >
               <p className={`text-xl font-black ${s.color}`}>{loading ? '—' : s.val}</p>
               <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">{s.label}</p>
-            </motion.div>
+            </motion.button>
           ))}
         </div>
 
         {/* ───── Search + Filter Tabs ───── */}
-        <div className="relative mb-5">
-          <Search className="absolute left-4 top-3.5 text-slate-500" size={16} />
-          <input 
-            type="text" 
-            placeholder="Buscar aluno, faixa ou modalidade..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-card-dark border border-border-dark rounded-2xl text-xs text-white focus:outline-none focus:border-primary/50 placeholder:text-slate-600"
-          />
+        <div className="flex gap-3 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-3.5 text-slate-500" size={16} />
+            <input
+              type="text"
+              placeholder="Buscar aluno, faixa..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-card-dark border border-border-dark rounded-2xl text-xs text-white focus:outline-none focus:border-primary/50 placeholder:text-slate-600"
+            />
+          </div>
+          <select
+            value={modalityFilter}
+            onChange={e => setModalityFilter(e.target.value)}
+            className="bg-card-dark border border-border-dark rounded-2xl px-4 text-xs text-slate-400 focus:outline-none focus:border-primary/50 appearance-none"
+          >
+            <option value="">Todas</option>
+            <option value="Jiu-Jitsu">Jiu-Jitsu</option>
+            <option value="Muay Thai">Muay Thai</option>
+            <option value="Kickboxing">Kickboxing</option>
+            <option value="Defesa Pessoal">Defesa Pessoal</option>
+            <option value="MMA">MMA</option>
+          </select>
+          <select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value as any)}
+            className="bg-card-dark border border-border-dark rounded-2xl px-4 text-xs text-slate-400 focus:outline-none focus:border-primary/50 appearance-none"
+          >
+            <option value="name">A-Z</option>
+            <option value="enrollment">Recentes</option>
+            <option value="payment">Status</option>
+          </select>
         </div>
+        <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest mb-5">Exibindo {filteredStudents.length} de {students.length} alunos</p>
 
         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-8">
           {tabs.map(tab => (
@@ -449,37 +535,36 @@ export default function PremiumAdminStudents() {
                   className="relative p-5 rounded-[2rem] bg-card-dark border border-border-dark hover:border-primary/30 transition-all group"
                 >
                   <div className="flex items-center gap-4">
-                    {/* Avatar */}
-                    <div className="size-14 rounded-2xl bg-slate-800 flex items-center justify-center border border-white/10 overflow-hidden shrink-0">
+                    {/* Avatar with colored initials */}
+                    <div className={`size-14 rounded-2xl bg-gradient-to-br ${getInitialsColor(student.full_name)} flex items-center justify-center shrink-0 overflow-hidden border border-white/10`}>
                       {student.avatar_url ? (
                         <img src={student.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                       ) : (
-                        <User className="text-slate-500" size={28} />
+                        <span className="text-white font-black text-lg">{getInitials(student.full_name)}</span>
                       )}
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-black text-white truncate">{student.full_name || 'Usuário Sem Nome'}</h3>
-                      <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                         <span className="text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 text-slate-400">
-                          <Award size={10} className="text-primary"/> {student.belt_level || 'Faixa Branca'}
+                          <Award size={10} className="text-primary"/> {student.belt_level || 'Branca'}
                         </span>
                         <span className={`text-[9px] font-black uppercase tracking-wider flex items-center gap-1 px-2 py-0.5 rounded-full border ${badge.bg} ${badge.color}`}>
                           <BadgeIcon size={10} /> {badge.label}
                         </span>
                       </div>
-                      {/* Next payment date */}
-                      {student.next_payment_date && (
-                        <p className="text-[9px] text-slate-600 mt-1 flex items-center gap-1">
-                          <Calendar size={9} /> Venc: {formatDate(student.next_payment_date)}
-                        </p>
-                      )}
+                      <div className="flex items-center gap-3 mt-1">
+                        {student.currentPlan && (
+                          <span className="text-[9px] text-indigo-400 font-bold">{student.currentPlan.name} · R${student.currentPlan.monthly_price}</span>
+                        )}
+                        {(() => { const d = getDaysUntilPayment(student.next_payment_date); return d ? <span className={`text-[9px] font-bold ${d.color}`}>{d.label}</span> : null; })()}
+                      </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 shrink-0">
-                      {/* Quick toggle payment */}
                       <button
                         onClick={(e) => { e.stopPropagation(); handleTogglePayment(student); }}
                         title={student.payment_status === 'paid' ? 'Marcar como pendente' : 'Marcar como pago'}
@@ -491,8 +576,7 @@ export default function PremiumAdminStudents() {
                       >
                         <DollarSign size={16} />
                       </button>
-                      {/* Open detail */}
-                      <button 
+                      <button
                         onClick={() => openStudentDetail(student)}
                         className="p-2.5 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors border border-primary/20"
                       >
@@ -501,17 +585,19 @@ export default function PremiumAdminStudents() {
                     </div>
                   </div>
 
-                  {/* Enrolled classes mini-indicator */}
-                  {student.enrollments.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-white/5 flex items-center gap-2 text-[9px] text-slate-500">
-                      <CalendarDays size={11} className="text-indigo-400" />
-                      <span className="font-bold uppercase tracking-wider">{student.enrollments.length} aula(s) agendada(s)</span>
-                      <span className="text-slate-700">•</span>
-                      <span className="truncate text-indigo-300/60">
-                        {student.enrollments.slice(0,2).map(e => e.class_title).join(', ')}
-                      </span>
-                    </div>
-                  )}
+                  {/* Enrolled classes + modality mini-bar */}
+                  <div className="mt-3 pt-3 border-t border-white/5 flex items-center gap-3 text-[9px] text-slate-500">
+                    {student.modality && (
+                      <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-black uppercase tracking-wider">{student.modality}</span>
+                    )}
+                    {student.enrollments.length > 0 && (
+                      <><CalendarDays size={10} className="text-indigo-400" />
+                      <span className="font-bold">{student.enrollments.length} aula(s)</span></>
+                    )}
+                    {student.enrollment_date && (
+                      <span className="ml-auto">desde {formatDate(student.enrollment_date)}</span>
+                    )}
+                  </div>
                 </motion.div>
               );
             })}
@@ -727,50 +813,55 @@ export default function PremiumAdminStudents() {
               {/* ── TAB: PAGAMENTOS ── */}
               {detailTab === 'pagamentos' && (
                 <div className="space-y-6">
-                  {/* Current status summary */}
-                  <div className="p-6 rounded-[2rem] bg-gradient-to-br from-emerald-500/5 to-amber-500/5 border border-white/5">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-black uppercase tracking-widest">Resumo</h3>
-                      <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${statusBadge(selectedStudent.payment_status).bg} ${statusBadge(selectedStudent.payment_status).color}`}>
-                        {statusBadge(selectedStudent.payment_status).label}
-                      </div>
+                  {/* Stats row */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/15">
+                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Último Pgto</p>
+                      <p className="text-sm font-black text-white mt-1">{formatDate(selectedStudent.last_payment_date)}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Último Pgto</p>
-                        <p className="text-sm font-black text-white mt-1">{formatDate(selectedStudent.last_payment_date)}</p>
-                      </div>
-                      <div>
-                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Próximo Venc.</p>
-                        <p className="text-sm font-black text-white mt-1">{formatDate(selectedStudent.next_payment_date)}</p>
-                      </div>
-                      <div>
-                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Plano</p>
-                        <p className="text-sm font-black text-indigo-400 mt-1">{selectedStudent.currentPlan?.name || 'Sem Plano'}</p>
-                      </div>
-                      <div>
-                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Valor Mensal</p>
-                        <p className="text-sm font-black text-emerald-400 mt-1">
-                          {selectedStudent.currentPlan ? `R$ ${selectedStudent.currentPlan.monthly_price}` : '—'}
-                        </p>
-                      </div>
+                    <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/15">
+                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Próximo Venc.</p>
+                      <p className="text-sm font-black text-white mt-1">{formatDate(selectedStudent.next_payment_date)}</p>
+                    </div>
+                    <div className="p-5 rounded-2xl bg-indigo-500/5 border border-indigo-500/15">
+                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Plano Atual</p>
+                      <p className="text-sm font-black text-indigo-400 mt-1">{selectedStudent.currentPlan?.name || 'Sem Plano'}</p>
+                    </div>
+                    <div className="p-5 rounded-2xl bg-teal-500/5 border border-teal-500/15">
+                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Total no Ano</p>
+                      <p className="text-sm font-black text-teal-400 mt-1">
+                        R$ {payments.filter(p => p.status === 'paid' && p.reference_month?.startsWith(new Date().getFullYear().toString())).reduce((sum, p) => sum + Number(p.amount), 0).toFixed(2)}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Register payment button */}
-                  <button 
-                    onClick={() => setShowPaymentModal(true)}
-                    className="w-full py-4 rounded-[1.5rem] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-emerald-500/20 transition-colors"
-                  >
-                    <Plus size={16} /> Registrar Pagamento
-                  </button>
+                  {/* Action buttons */}
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setShowPaymentModal(true)}
+                      className="flex-1 py-4 rounded-[1.5rem] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-500/20 transition-colors"
+                    >
+                      <Plus size={16} /> Registrar Pgto
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await supabase.from('profiles').update({ payment_status: 'overdue' }).eq('id', selectedStudent.id);
+                        await fetchData();
+                        showToast('Marcado como atrasado', 'err');
+                        setSelectedStudent(null); setEditingStudent(null);
+                      }}
+                      className="flex-1 py-4 rounded-[1.5rem] bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors"
+                    >
+                      <AlertCircle size={16} /> Marcar Atrasado
+                    </button>
+                  </div>
 
                   {/* Payment history */}
                   <div>
                     <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Histórico de Pagamentos</h4>
                     {loadingPayments ? (
                       <div className="py-8 flex justify-center">
-                        <div className="w-6 h-6 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                       </div>
                     ) : payments.length === 0 ? (
                       <div className="py-10 text-center text-slate-600 text-[10px] font-bold uppercase tracking-widest">
@@ -780,6 +871,8 @@ export default function PremiumAdminStudents() {
                       <div className="space-y-3">
                         {payments.map(pay => {
                           const pBadge = statusBadge(pay.status);
+                          const methodColor: Record<string, string> = { pix: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dinheiro: 'text-blue-400 bg-blue-500/10 border-blue-500/20', cartao: 'text-violet-400 bg-violet-500/10 border-violet-500/20', transferencia: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' };
+                          const mc = methodColor[pay.method || ''] || 'text-slate-400 bg-slate-500/10 border-slate-500/20';
                           return (
                             <div key={pay.id} className="p-4 rounded-2xl bg-card-dark border border-border-dark flex items-center justify-between">
                               <div className="flex items-center gap-3">
@@ -788,13 +881,14 @@ export default function PremiumAdminStudents() {
                                 </div>
                                 <div>
                                   <p className="text-xs font-black text-white">{formatMonth(pay.reference_month)}</p>
-                                  <p className="text-[9px] text-slate-500 font-bold">
-                                    {pay.method ? pay.method.toUpperCase() : ''} {pay.payment_date ? `• ${formatDate(pay.payment_date)}` : ''}
-                                  </p>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    {pay.method && <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded border ${mc}`}>{pay.method}</span>}
+                                    {pay.payment_date && <span className="text-[9px] text-slate-500">{formatDate(pay.payment_date)}</span>}
+                                  </div>
                                 </div>
                               </div>
                               <div className="text-right">
-                                <p className="text-sm font-black text-emerald-400">R$ {pay.amount}</p>
+                                <p className="text-sm font-black text-emerald-400">R$ {Number(pay.amount).toFixed(2)}</p>
                                 <p className={`text-[8px] font-black uppercase tracking-widest ${pBadge.color}`}>{pBadge.label}</p>
                               </div>
                             </div>
@@ -807,60 +901,85 @@ export default function PremiumAdminStudents() {
               )}
 
               {/* ── TAB: AULAS ── */}
-              {detailTab === 'aulas' && (
+              {detailTab === 'aulas' && (() => {
+                const now = new Date();
+                const upcoming = selectedStudent.enrollments.filter(e => e.class_start && new Date(e.class_start) >= now);
+                const past = selectedStudent.enrollments.filter(e => !e.class_start || new Date(e.class_start) < now);
+                const attended = past.filter(e => e.status === 'attended').length;
+                return (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black uppercase tracking-widest">Aulas Agendadas</h3>
-                    <span className="text-[10px] font-black text-primary">{selectedStudent.enrollments.length} total</span>
+                  {/* Attendance summary */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/15 text-center">
+                      <p className="text-lg font-black text-indigo-400">{selectedStudent.enrollments.length}</p>
+                      <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest">Total</p>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/15 text-center">
+                      <p className="text-lg font-black text-emerald-400">{attended}</p>
+                      <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest">Presença</p>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-primary/5 border border-primary/15 text-center">
+                      <p className="text-lg font-black text-primary">{upcoming.length}</p>
+                      <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest">Próximas</p>
+                    </div>
                   </div>
 
                   {selectedStudent.enrollments.length === 0 ? (
                     <div className="py-16 text-center space-y-3">
                       <CalendarDays size={40} className="mx-auto text-slate-700" />
-                      <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">
-                        Este aluno não tem aulas agendadas.
-                      </p>
+                      <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">Sem aulas agendadas.</p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
-                      {selectedStudent.enrollments.map(enrollment => {
-                        const classDate = enrollment.class_start ? new Date(enrollment.class_start) : null;
-                        const isPast = classDate ? classDate < new Date() : false;
-                        const statusLabel = enrollment.status === 'attended' ? 'Presente' : enrollment.status === 'cancelled' ? 'Cancelada' : isPast ? 'Concluída' : 'Confirmada';
-                        const statusColor = enrollment.status === 'attended' ? 'text-emerald-400' : enrollment.status === 'cancelled' ? 'text-red-400' : isPast ? 'text-slate-400' : 'text-indigo-400';
-
-                        return (
-                          <motion.div
-                            key={enrollment.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className={`p-5 rounded-2xl border transition-all ${
-                              isPast ? 'bg-card-dark/50 border-border-dark/50 opacity-60' : 'bg-card-dark border-border-dark'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="text-sm font-black text-white">{enrollment.class_title}</h4>
-                              <span className={`text-[8px] font-black uppercase tracking-widest ${statusColor}`}>{statusLabel}</span>
-                            </div>
-                            <div className="flex items-center gap-4 text-[9px] text-slate-500 font-bold uppercase tracking-wider">
-                              <span className="flex items-center gap-1">
-                                <Calendar size={10} />
-                                {classDate ? classDate.toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' }) : '—'}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Clock size={10} />
-                                {classDate ? classDate.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) : '—'}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Award size={10} className="text-primary" />
-                                {enrollment.class_category}
-                              </span>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
+                    <>
+                      {upcoming.length > 0 && (
+                        <div>
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-3">Próximas ({upcoming.length})</h4>
+                          <div className="space-y-3">
+                            {upcoming.map(enrollment => {
+                              const classDate = new Date(enrollment.class_start);
+                              return (
+                                <div key={enrollment.id} className="p-5 rounded-2xl bg-card-dark border border-indigo-500/20">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <h4 className="text-sm font-black text-white">{enrollment.class_title}</h4>
+                                    <span className="text-[8px] font-black uppercase text-indigo-400">Confirmada</span>
+                                  </div>
+                                  <div className="flex items-center gap-4 text-[9px] text-slate-500 font-bold">
+                                    <span className="flex items-center gap-1"><Calendar size={10} />{classDate.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</span>
+                                    <span className="flex items-center gap-1"><Clock size={10} />{classDate.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>
+                                    {enrollment.class_category && <span className="flex items-center gap-1"><Award size={10} className="text-primary" />{enrollment.class_category}</span>}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      {past.length > 0 && (
+                        <div>
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Passadas ({past.length})</h4>
+                          <div className="space-y-3">
+                            {past.map(enrollment => {
+                              const classDate = enrollment.class_start ? new Date(enrollment.class_start) : null;
+                              const statusColor = enrollment.status === 'attended' ? 'text-emerald-400' : enrollment.status === 'cancelled' ? 'text-red-400' : 'text-slate-500';
+                              const statusLabel = enrollment.status === 'attended' ? 'Presente' : enrollment.status === 'cancelled' ? 'Cancelada' : 'Concluída';
+                              return (
+                                <div key={enrollment.id} className="p-4 rounded-2xl bg-card-dark/50 border border-border-dark/50 opacity-70">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="text-xs font-black text-white">{enrollment.class_title}</h4>
+                                    <span className={`text-[8px] font-black uppercase ${statusColor}`}>{statusLabel}</span>
+                                  </div>
+                                  {classDate && <p className="text-[9px] text-slate-600 mt-1">{classDate.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'})}</p>}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
+                </div>
+                );
+              })()}
                 </div>
               )}
             </div>
