@@ -22,6 +22,7 @@ import AuthCallback from './screens/AuthCallback';
 import PremiumAssetManagement from './screens/PremiumAssetManagement';
 import PremiumAdminStudents from './screens/PremiumAdminStudents';
 import PremiumAdminSchedule from './screens/PremiumAdminSchedule';
+import PremiumAdminOwner from './screens/PremiumAdminOwner';
 
 export default function App() {
   return (
@@ -54,6 +55,11 @@ export default function App() {
             </ProtectedRoute>
           } />
           <Route path="/admin" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <PremiumAdminOwner />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/legacy" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <PremiumAdminDashboard />
             </ProtectedRoute>
