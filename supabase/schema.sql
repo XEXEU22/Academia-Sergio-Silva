@@ -8,6 +8,14 @@ CREATE TABLE public.profiles (
   role TEXT DEFAULT 'student' CHECK (role IN ('student', 'instructor', 'admin')),
   belt_level TEXT,
   experience_years INTEGER,
+  enrollment_date DATE,
+  plan_name TEXT,
+  payment_status TEXT DEFAULT 'pending',
+  last_payment_date DATE,
+  next_payment_date DATE,
+  modality TEXT,
+  is_active BOOLEAN DEFAULT true,
+  notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
