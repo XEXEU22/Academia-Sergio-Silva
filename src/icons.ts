@@ -78,7 +78,8 @@ import {
   Edit3,
   ShieldAlert,
   DollarSign,
-  UserCheck
+  UserCheck,
+  Save
 } from 'lucide-react';
 
 // Export all icons for use throughout the app
@@ -162,5 +163,6 @@ export {
   Edit3,
   ShieldAlert,
   DollarSign,
-  UserCheck
+  UserCheck,
+  Save
 };

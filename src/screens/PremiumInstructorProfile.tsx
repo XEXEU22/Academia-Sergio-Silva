@@ -25,6 +25,17 @@ import BottomNav from '../components/BottomNav';
 
 const PremiumInstructorProfile: React.FC = () => {
   const navigate = useNavigate();
+  const [masterPhoto, setMasterPhoto] = React.useState<string>(
+    'https://ui-avatars.com/api/?name=S+S&background=FF6B00&color=fff'
+  );
+
+  React.useEffect(() => {
+    // Load master photo from site_assets if available
+    import('../supabase').then(({ supabase }) => {
+      supabase.from('site_assets').select('url').eq('asset_key', 'master_photo').single()
+        .then(({ data }) => { if (data?.url) setMasterPhoto(data.url); });
+    });
+  }, []);
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -50,7 +61,7 @@ const PremiumInstructorProfile: React.FC = () => {
         <button onClick={() => navigate(-1)} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">
           <ChevronLeft size={20} />
         </button>
-        <h2 className="text-sm font-bold tracking-widest uppercase">Mestre Sérgio</h2>
+        <h2 className="text-sm font-bold tracking-widest uppercase">Arte de Lutar</h2>
         <button className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">
           <Share2 size={20} />
         </button>
@@ -71,7 +82,7 @@ const PremiumInstructorProfile: React.FC = () => {
                 <img 
                    alt="Mestre Sérgio" 
                    className="w-full h-full object-cover rounded-full" 
-                   src="https://ui-avatars.com/api/?name=S+S&background=FF6B00&color=fff" 
+                   src={masterPhoto}
                 />
              </div>
              <div className="absolute bottom-2 right-2 bg-primary text-white size-10 rounded-full flex items-center justify-center border-4 border-background-dark shadow-2xl">

@@ -19,7 +19,9 @@ import {
   Wallet,
   ShieldCheck,
   Award,
-  Calendar
+  Calendar,
+  Image as ImageIcon,
+  Save
 } from '../icons';
 
 /* ────────────────────────────────────────────────────────────────────────── */
@@ -40,7 +42,7 @@ interface OwnerData {
 const PremiumAdminOwner: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'students' | 'reservations' | 'notifications'>('students');
+  const [activeTab, setActiveTab] = useState<'students' | 'reservations' | 'notifications' | 'photo'>('students');
   const [data, setData] = useState<OwnerData>({
     students: [],
     enrollments: [],
@@ -55,9 +57,41 @@ const PremiumAdminOwner: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
 
+  // Master Photo
+  const [masterPhoto, setMasterPhoto] = useState('');
+  const [masterPhotoInput, setMasterPhotoInput] = useState('');
+  const [savingPhoto, setSavingPhoto] = useState(false);
+  const [photoMsg, setPhotoMsg] = useState<{ok: boolean; text: string} | null>(null);
+
   useEffect(() => {
     fetchDashboardData();
+    fetchMasterPhoto();
   }, []);
+
+  const fetchMasterPhoto = async () => {
+    const { data } = await supabase.from('site_assets').select('url').eq('asset_key', 'master_photo').single();
+    if (data?.url) { setMasterPhoto(data.url); setMasterPhotoInput(data.url); }
+  };
+
+  const handleSavePhoto = async () => {
+    if (!masterPhotoInput.trim()) return;
+    setSavingPhoto(true);
+    const { data: existing } = await supabase.from('site_assets').select('id').eq('asset_key', 'master_photo').single();
+    let error;
+    if (existing) {
+      ({ error } = await supabase.from('site_assets').update({ url: masterPhotoInput }).eq('asset_key', 'master_photo'));
+    } else {
+      ({ error } = await supabase.from('site_assets').insert({ asset_key: 'master_photo', url: masterPhotoInput, description: 'Foto do Mestre na aba Mestre' }));
+    }
+    if (error) {
+      setPhotoMsg({ ok: false, text: 'Erro ao salvar: ' + error.message });
+    } else {
+      setMasterPhoto(masterPhotoInput);
+      setPhotoMsg({ ok: true, text: 'Foto atualizada com sucesso!' });
+    }
+    setSavingPhoto(false);
+    setTimeout(() => setPhotoMsg(null), 3000);
+  };
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -199,16 +233,17 @@ const PremiumAdminOwner: React.FC = () => {
         </section>
 
         {/* Navigation Tabs - Modern & Focused */}
-        <div className="flex p-1.5 bg-white/5 rounded-[2rem] border border-white/10">
+        <div className="flex p-1.5 bg-white/5 rounded-[2rem] border border-white/10 overflow-x-auto">
           {[
             { id: 'students', label: 'Alunos', icon: Users },
             { id: 'reservations', label: 'Reservas', icon: CalendarDays },
             { id: 'notifications', label: 'Avisos', icon: Bell },
+            { id: 'photo', label: 'Foto', icon: ImageIcon },
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex-1 flex items-center justify-center gap-2.5 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2.5 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest transition-all shrink-0 ${
                 activeTab === tab.id 
                 ? 'bg-primary text-white shadow-xl shadow-primary/20' 
                 : 'text-slate-500 hover:text-white'
@@ -396,6 +431,66 @@ const PremiumAdminOwner: React.FC = () => {
                   Nenhum aviso ou notificação.
                 </div>
               )}
+            </motion.section>
+          )}
+          {activeTab === 'photo' && (
+            <motion.section
+              key="photo"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="space-y-6"
+            >
+              <div className="space-y-2">
+                <h3 className="text-base font-black text-white">Foto do Mestre</h3>
+                <p className="text-xs text-slate-500">Esta imagem aparece na aba <span className="text-primary font-bold">Mestre</span> para todos os alunos.</p>
+              </div>
+
+              {/* Preview */}
+              {masterPhoto && (
+                <div className="relative size-36 mx-auto">
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-[30px] animate-pulse" />
+                  <div className="relative size-36 rounded-full border-4 border-primary overflow-hidden">
+                    <img src={masterPhoto} alt="Mestre" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+              )}
+
+              {/* Input URL */}
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">URL da Nova Foto</label>
+                <input
+                  type="text"
+                  value={masterPhotoInput}
+                  onChange={e => setMasterPhotoInput(e.target.value)}
+                  placeholder="https://exemplo.com/foto-mestre.jpg"
+                  className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] py-4 px-5 text-sm focus:outline-none focus:border-primary/50 transition-all"
+                />
+                <p className="text-[9px] text-slate-600">Cole o link de uma imagem pública (Google Drive, Imgur, etc.)</p>
+              </div>
+
+              {/* Feedback */}
+              {photoMsg && (
+                <div className={`p-4 rounded-2xl text-xs font-bold flex items-center gap-2 ${
+                  photoMsg.ok ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border border-red-500/20 text-red-400'
+                }`}>
+                  {photoMsg.ok ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                  {photoMsg.text}
+                </div>
+              )}
+
+              <button
+                onClick={handleSavePhoto}
+                disabled={savingPhoto || !masterPhotoInput.trim()}
+                className={`w-full py-5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 transition-all ${
+                  savingPhoto || !masterPhotoInput.trim()
+                    ? 'bg-white/5 text-slate-500 cursor-not-allowed'
+                    : 'bg-primary text-white shadow-xl shadow-primary/20 hover:shadow-primary/40'
+                }`}
+              >
+                {savingPhoto ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+                {savingPhoto ? 'Salvando...' : 'Salvar Foto'}
+              </button>
             </motion.section>
           )}
         </AnimatePresence>
