@@ -882,8 +882,8 @@ export default function PremiumAdminStudents() {
                                 <div>
                                   <p className="text-xs font-black text-white">{formatMonth(pay.reference_month)}</p>
                                   <div className="flex items-center gap-2 mt-0.5">
-                                    {pay.method && <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded border ${mc}`}>{pay.method}</span>}
-                                    {pay.payment_date && <span className="text-[9px] text-slate-500">{formatDate(pay.payment_date)}</span>}
+                                    {pay.method && (<span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded border ${mc}`}>{pay.method}</span>)}
+                                    {pay.payment_date && (<span className="text-[9px] text-slate-500">{formatDate(pay.payment_date)}</span>)}
                                   </div>
                                 </div>
                               </div>
@@ -968,7 +968,7 @@ export default function PremiumAdminStudents() {
                                     <h4 className="text-xs font-black text-white">{enrollment.class_title}</h4>
                                     <span className={`text-[8px] font-black uppercase ${statusColor}`}>{statusLabel}</span>
                                   </div>
-                                  {classDate && <p className="text-[9px] text-slate-600 mt-1">{classDate.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'})}</p>}
+                                  {classDate && (<p className="text-[9px] text-slate-600 mt-1">{classDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</p>)}
                                 </div>
                               );
                             })}
@@ -980,8 +980,7 @@ export default function PremiumAdminStudents() {
                 </div>
                 );
               })()}
-                </div>
-              )}
+
             </div>
           </motion.div>
         )}
