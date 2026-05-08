@@ -132,7 +132,7 @@ const PremiumRegister: React.FC = () => {
             </div>
           )}
           <div className="space-y-3">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 px-1">Nome de Guerra</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 px-1">Nome</label>
             <div className="relative group">
               <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-primary transition-colors">
                 <User size={18} />
@@ -182,7 +182,7 @@ const PremiumRegister: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 px-1">Caminho Desejado</label>
+             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 px-1">Modalidade</label>
              <div className="relative">
                <select 
                  className="w-full h-16 rounded-2xl border border-border-dark bg-card-dark pl-6 pr-10 focus:border-primary outline-none appearance-none text-sm font-bold tracking-tight text-white transition-all shadow-xl"

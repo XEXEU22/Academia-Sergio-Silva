@@ -13,7 +13,7 @@ const BottomNav: React.FC = () => {
     { path: '/videos', label: 'Treinos', icon: Zap },
     { path: '/gallery', label: 'Galeria', icon: ImageIcon },
     { path: '/dashboard', label: 'Aluno', icon: GraduationCap },
-    { path: '/instructor', label: 'Perfil', icon: User },
+    { path: '/instructor', label: 'Mestre', icon: User },
   ];
 
   return (
