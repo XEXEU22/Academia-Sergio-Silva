@@ -12,7 +12,7 @@ const AuthCallback: React.FC = () => {
         // Redireciona para o dashboard assim que o login for confirmado
         // Reduzido o delay para 300ms apenas para o feedback visual de "Validando" ser perceptível mas não irritante
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/');
         }, 300);
       }
     });

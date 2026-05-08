@@ -54,18 +54,8 @@ const PremiumRegister: React.FC = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       setLoading(false);
-      
-      // Check if email confirmation is required (session will be null)
-      if (data?.session) {
-        if (confirm('Cadastro realizado com sucesso! Deseja que o sistema lembre seus dados de acesso?')) {
-          localStorage.setItem('remembered_email', email);
-        }
-        navigate('/dashboard');
-      } else {
-        // More descriptive success for when email confirmation is ON
-        alert('Cadastro realizado com sucesso! \n\nIMPORTANTE: Verifique seu e-mail para ativar sua conta. O acesso só será liberado após a confirmação no link enviado para ' + email + '.');
-        navigate('/login');
-      }
+      // Redirect to home page regardless of whether email confirmation is required
+      navigate('/');
     }
   };
 
