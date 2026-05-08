@@ -302,6 +302,7 @@ export default function PremiumAdminStudents() {
           last_payment_date: editingStudent.last_payment_date || null,
           next_payment_date: editingStudent.next_payment_date || null,
           modality: editingStudent.modality,
+          experience_years: parseInt(editingStudent.experience_years) || 0,
           is_active: editingStudent.is_active,
           notes: editingStudent.notes
         })
@@ -700,6 +701,10 @@ export default function PremiumAdminStudents() {
                       >
                         <option value="">Nenhuma</option>
                         <option value="Faixa Branca">Faixa Branca</option>
+                        <option value="Faixa Cinza">Faixa Cinza</option>
+                        <option value="Faixa Amarela">Faixa Amarela</option>
+                        <option value="Faixa Laranja">Faixa Laranja</option>
+                        <option value="Faixa Verde">Faixa Verde</option>
                         <option value="Faixa Azul">Faixa Azul</option>
                         <option value="Faixa Roxa">Faixa Roxa</option>
                         <option value="Faixa Marrom">Faixa Marrom</option>
@@ -708,15 +713,54 @@ export default function PremiumAdminStudents() {
                       </select>
                     </label>
                     <label className="block">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 mb-1 block">Permissão</span>
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 mb-1 block">Experiência (0-10)</span>
+                      <input 
+                        type="number" 
+                        min="0"
+                        max="10"
+                        value={editingStudent.experience_years || 0}
+                        onChange={e => setEditingStudent({...editingStudent, experience_years: e.target.value})}
+                        className="w-full bg-card-dark border border-border-dark py-4 px-5 rounded-[1.5rem] text-sm text-white focus:outline-none focus:border-primary"
+                        placeholder="Ex: 5 (50%)"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="p-6 rounded-[2rem] bg-primary/5 border border-primary/20">
+                    <h3 className="text-sm font-black tracking-widest uppercase flex items-center gap-2 mb-4 text-primary">
+                      <TrendingUp size={16} /> Evolução Técnica
+                    </h3>
+                    <div className="space-y-4">
+                       <div className="flex justify-between items-center px-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Progresso para Próxima Faixa</span>
+                          <span className="text-sm font-black text-primary">{(editingStudent.experience_years || 0) * 10}%</span>
+                       </div>
+                       <input 
+                         type="range"
+                         min="0"
+                         max="10"
+                         step="1"
+                         value={editingStudent.experience_years || 0}
+                         onChange={e => setEditingStudent({...editingStudent, experience_years: parseInt(e.target.value)})}
+                         className="w-full h-2 bg-white/5 rounded-lg appearance-none cursor-pointer accent-primary"
+                       />
+                       <p className="text-[9px] text-slate-500 italic px-2">
+                         Este valor controla a barra de progresso que o aluno vê no Dashboard pessoal.
+                       </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <label className="block">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 mb-1 block">Permissão de Acesso</span>
                       <select 
                         value={editingStudent.role || 'student'}
                         onChange={e => setEditingStudent({...editingStudent, role: e.target.value})}
                         className="w-full bg-card-dark border border-border-dark py-4 px-5 rounded-[1.5rem] text-sm text-white focus:outline-none focus:border-primary appearance-none"
                       >
-                        <option value="student">Aluno</option>
-                        <option value="instructor">Instrutor</option>
-                        <option value="admin">Administrador</option>
+                        <option value="student">Aluno (Padrão)</option>
+                        <option value="instructor">Instrutor (Pode ver horários)</option>
+                        <option value="admin">Administrador (Poder Total)</option>
                       </select>
                     </label>
                   </div>
