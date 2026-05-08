@@ -100,7 +100,6 @@ const PremiumAdminOwner: React.FC = () => {
       const { data: profiles, error: pError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('role', 'student')
         .order('full_name', { ascending: true });
 
       if (pError) throw pError;
@@ -127,23 +126,20 @@ const PremiumAdminOwner: React.FC = () => {
       if (nError) throw nError;
 
       // Calculate Stats
-      const total = profiles.length;
-      const paid = profiles.filter(s => s.payment_status === 'paid').length;
-      const pending = profiles.filter(s => s.payment_status === 'pending' || !s.payment_status).length;
-      const overdue = profiles.filter(s => s.payment_status === 'overdue').length;
-
-      // Filter reservations for "today" (simplified)
-      const today = new Date().toISOString().split('T')[0];
-      const todayRes = enrollments.filter((e: any) => e.class?.start_time?.startsWith(today)).length;
+      if (!profiles) {
+        console.error('Nenhum perfil retornado:', pError);
+        setData(prev => ({ ...prev, students: [] }));
+        return;
+      }
 
       setData({
         students: profiles,
-        enrollments,
-        notifications,
+        enrollments: enrollments || [],
+        notifications: notifications || [],
         stats: {
-          totalStudents: total,
-          paidThisMonth: paid,
-          pendingPayments: pending + overdue,
+          totalStudents: profiles.filter(p => p.role === 'student').length,
+          paidThisMonth: profiles.filter(s => s.payment_status === 'paid').length,
+          pendingPayments: profiles.filter(s => s.payment_status === 'pending' || !s.payment_status).length,
           reservationsToday: todayRes
         }
       });
