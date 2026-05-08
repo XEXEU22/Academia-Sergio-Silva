@@ -179,24 +179,31 @@ export default function PremiumAdminStudents() {
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [profilesRes, plansRes, subsRes, enrollmentsRes] = await Promise.all([
-        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
-        supabase.from('plans').select('*').eq('is_active', true),
-        supabase.from('subscriptions').select('user_id, plan_id, status').eq('status', 'active'),
+      // 1. Profiles (Primary)
+      const { data: profiles, error: pError } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (pError) throw pError;
+
+      // 2. Secondary Data (may fail due to RLS if not properly configured for Admins)
+      const [plansRes, subsRes, enrollmentsRes] = await Promise.all([
+        supabase.from('plans').select('*').eq('is_active', true).then(r => r.data || []),
+        supabase.from('subscriptions').select('user_id, plan_id, status').eq('status', 'active').then(r => r.data || []),
         supabase.from('enrollments').select(`
           id, status, created_at, user_id,
           classes(title, start_time, category, duration_minutes)
-        `).order('created_at', { ascending: false })
-      ]);
+        `).order('created_at', { ascending: false }).then(r => r.data || [])
+      ]).catch(err => {
+        console.warn('Erro ao buscar dados secundários (planos/matrículas):', err);
+        return [[], [], []];
+      });
 
-      if (profilesRes.error) throw profilesRes.error;
-
-      const mergedStudents: StudentProfile[] = (profilesRes.data || []).map((profile: any) => {
-        const activeSub = (subsRes.data || []).find((s: any) => s.user_id === profile.id);
-        const plan = (plansRes.data || []).find((p: any) => p.id === activeSub?.plan_id);
-        const studentEnrollments = (enrollmentsRes.data || [])
+      const mergedStudents: StudentProfile[] = (profiles || []).map((profile: any) => {
+        const activeSub = (subsRes || []).find((s: any) => s.user_id === profile.id);
+        const plan = (plansRes || []).find((p: any) => p.id === activeSub?.plan_id);
+        const studentEnrollments = (enrollmentsRes || [])
           .filter((e: any) => e.user_id === profile.id)
           .map((e: any) => ({
             id: e.id,
@@ -217,7 +224,7 @@ export default function PremiumAdminStudents() {
       });
 
       setStudents(mergedStudents);
-      setPlans(plansRes.data || []);
+      setPlans(plansRes || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
