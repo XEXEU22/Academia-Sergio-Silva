@@ -12,6 +12,13 @@
   --color-border-dark: #3d2c1e;
 }
 
+/* Font for academy name - temple/dojo style */
+.font-temple {
+  font-family: 'Cinzel Decorative', serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .glass {
   background: rgba(42, 31, 22, 0.7); /* Matching card-dark with transparency */
   backdrop-filter: blur(12px);

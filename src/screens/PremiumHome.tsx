@@ -85,8 +85,8 @@ const PremiumHome: React.FC = () => {
             <Crown size={22} className="fill-current" />
           </motion.div>
           <div className="leading-none">
-            <h1 className="text-sm font-black tracking-tight uppercase text-primary">Arte de Lutar</h1>
-            <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">Estúdio de Elite</p>
+            <h1 className="font-temple text-[11px] font-black text-primary">Arte de Lutar</h1>
+            <p className="text-[9px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">Estúdio de Elite</p>
           </div>
         </div>
         
@@ -133,9 +133,9 @@ const PremiumHome: React.FC = () => {
            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center">
               <motion.h2 
                 variants={itemVariants}
-                className="text-5xl font-black tracking-tighter leading-none mb-4 text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]"
+                className="font-temple text-4xl font-black leading-tight mb-4 text-white drop-shadow-[0_5px_20px_rgba(0,0,0,0.8)] [text-shadow:0_0_30px_rgba(255,107,0,0.4)]"
               >
-                Arte de <br /> Lutar
+                ARTE DE LUTAR
               </motion.h2>
               <motion.p 
                 variants={itemVariants} 
