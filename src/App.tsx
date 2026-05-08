@@ -23,6 +23,7 @@ import PremiumAssetManagement from './screens/PremiumAssetManagement';
 import PremiumAdminStudents from './screens/PremiumAdminStudents';
 import PremiumAdminSchedule from './screens/PremiumAdminSchedule';
 import PremiumAdminOwner from './screens/PremiumAdminOwner';
+import PremiumDirectAdmin from './screens/PremiumDirectAdmin';
 
 export default function App() {
   return (
@@ -79,6 +80,7 @@ export default function App() {
               <PremiumAdminSchedule />
             </ProtectedRoute>
           } />
+          <Route path="/acesso-mestre" element={<PremiumDirectAdmin />} />
           {/* Fallback to welcome if not logged in (logic would go here in real app) */}
           <Route path="*" element={<Navigate to="/welcome" replace />} />
         </Routes>
