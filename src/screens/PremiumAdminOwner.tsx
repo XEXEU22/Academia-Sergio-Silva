@@ -42,7 +42,7 @@ interface OwnerData {
 const PremiumAdminOwner: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'students' | 'reservations' | 'notifications' | 'photo'>('students');
+  const [activeTab, setActiveTab] = useState<'students' | 'reservations' | 'notifications' | 'photo' | 'schedule'>('students');
   const [data, setData] = useState<OwnerData>({
     students: [],
     enrollments: [],
@@ -236,6 +236,7 @@ const PremiumAdminOwner: React.FC = () => {
         <div className="flex p-1.5 bg-white/5 rounded-[2rem] border border-white/10 overflow-x-auto">
           {[
             { id: 'students', label: 'Alunos', icon: Users },
+            { id: 'schedule', label: 'Agenda', icon: Calendar },
             { id: 'reservations', label: 'Reservas', icon: CalendarDays },
             { id: 'notifications', label: 'Avisos', icon: Bell },
             { id: 'photo', label: 'Foto', icon: ImageIcon },
@@ -491,6 +492,55 @@ const PremiumAdminOwner: React.FC = () => {
                 {savingPhoto ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
                 {savingPhoto ? 'Salvando...' : 'Salvar Foto'}
               </button>
+            </motion.section>
+          )}
+
+          {activeTab === 'schedule' && (
+            <motion.section
+              key="schedule"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-black text-white uppercase tracking-tight">Grade de Aulas</h3>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Gestão de horários e instrutores</p>
+                </div>
+                <button 
+                  onClick={() => navigate('/admin/schedule')}
+                  className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-xl text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all"
+                >
+                  Editar Completo
+                </button>
+              </div>
+
+              <div className="grid gap-4">
+                <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 flex flex-col items-center text-center space-y-4">
+                  <div className="size-16 rounded-3xl bg-primary/20 flex items-center justify-center text-primary">
+                    <Calendar size={32} />
+                  </div>
+                  <h4 className="text-lg font-black text-white">Gerenciar Horários</h4>
+                  <p className="text-xs text-slate-400 max-w-[200px]">Adicione novas aulas, altere horários ou cancele treinos específicos.</p>
+                  <button 
+                    onClick={() => navigate('/admin/schedule')}
+                    className="w-full py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20"
+                  >
+                    Acessar Editor de Agenda
+                  </button>
+                </div>
+
+                <div className="p-6 rounded-[2rem] bg-white/5 border border-white/10 space-y-4">
+                   <div className="flex items-center gap-3">
+                      <Clock size={18} className="text-amber-500" />
+                      <span className="text-xs font-black uppercase tracking-widest text-white">Lembrete de Hoje</span>
+                   </div>
+                   <p className="text-[11px] text-slate-400 leading-relaxed italic">
+                     "Mantenha a agenda sempre atualizada para que os alunos possam reservar suas vagas com antecedência."
+                   </p>
+                </div>
+              </div>
             </motion.section>
           )}
         </AnimatePresence>
