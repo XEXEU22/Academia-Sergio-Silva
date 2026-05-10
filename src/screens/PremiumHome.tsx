@@ -25,19 +25,35 @@ const PremiumHome: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const [homeBanner, setHomeBanner] = React.useState('https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=1200&auto=format&fit=crop');
+  const [homeVideo, setHomeVideo] = React.useState<{url: string, title: string} | null>(null);
   const [showUserMenu, setShowUserMenu] = React.useState(false);
 
   React.useEffect(() => {
-    const fetchBanner = async () => {
-      const { data } = await supabase
+    const fetchAssets = async () => {
+      // Fetch Banner
+      const { data: bannerData } = await supabase
         .from('site_assets')
         .select('url')
         .eq('asset_key', 'home_banner')
         .single();
       
-      if (data?.url) setHomeBanner(data.url);
+      if (bannerData?.url) setHomeBanner(bannerData.url);
+
+      // Fetch Home Video
+      const { data: videoData } = await supabase
+        .from('site_assets')
+        .select('url, description')
+        .eq('asset_key', 'home_video')
+        .single();
+      
+      if (videoData?.url) {
+        setHomeVideo({
+          url: videoData.url,
+          title: videoData.description || 'Aula de Defesa Pessoal'
+        });
+      }
     };
-    fetchBanner();
+    fetchAssets();
   }, []);
 
   const containerVariants: Variants = {
@@ -207,13 +223,23 @@ const PremiumHome: React.FC = () => {
              <motion.div 
                variants={itemVariants}
                whileHover={{ y: -5 }}
+               onClick={() => {
+                 if (homeVideo?.url) {
+                   window.open(homeVideo.url, '_blank');
+                 } else {
+                   navigate('/videos');
+                 }
+               }}
                className="relative rounded-[2.5rem] overflow-hidden bg-card-dark border border-border-dark shadow-2xl shadow-primary/5 aspect-video cursor-pointer"
              >
                 <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/20 to-transparent z-10" />
                 <img 
-                  src="https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop" 
+                  src={homeVideo ? `https://img.youtube.com/vi/${homeVideo.url.match(/(?:v=|\/)([0-9A-Za-z_-]{11}).*/)?.[1]}/maxresdefault.jpg` : "https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop"} 
                   alt="Teaser" 
                   className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop";
+                  }}
                 />
                 
                 <div className="absolute inset-0 z-20 flex items-center justify-center">
@@ -222,13 +248,15 @@ const PremiumHome: React.FC = () => {
                    </div>
                 </div>
                 
-                <div className="absolute bottom-6 left-6 right-6 z-20 flex flex-col gap-3">
+                <div className="absolute bottom-6 left-6 right-6 z-20 flex flex-col gap-3 text-left">
                    <div className="flex items-center gap-2">
                       <div className="px-2 py-0.5 rounded-full bg-primary/20 border border-primary/30 text-primary text-[9px] font-black uppercase tracking-widest animate-pulse">
-                          Ao Vivo Agora
+                          {homeVideo ? 'Destaque' : 'Ao Vivo Agora'}
                       </div>
                    </div>
-                   <h3 className="text-xl font-black text-white leading-tight">Aula de Defesa Pessoal: Contra-Ataques</h3>
+                   <h3 className="text-xl font-black text-white leading-tight">
+                     {homeVideo?.title || 'Aula de Defesa Pessoal: Contra-Ataques'}
+                   </h3>
                 </div>
              </motion.div>
           </section>

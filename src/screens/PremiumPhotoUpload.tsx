@@ -10,6 +10,14 @@ import {
 } from '../icons';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { Trash2 } from '../icons';
+
+interface Photo {
+  id: string;
+  title: string;
+  image_url: string;
+  category: string;
+}
 
 const PremiumPhotoUpload: React.FC = () => {
   const navigate = useNavigate();
@@ -23,8 +31,18 @@ const PremiumPhotoUpload: React.FC = () => {
     image_url: '',
     category: 'Recentes',
   });
+  const [existingPhotos, setExistingPhotos] = useState<Photo[]>([]);
 
   const categories = ['Recentes', 'Instalações', 'Treinos', 'Momentos', 'Mental', 'Alunos', 'Mestres'];
+
+  const fetchPhotos = async () => {
+    const { data } = await supabase.from('photos').select('*').order('created_at', { ascending: false });
+    if (data) setExistingPhotos(data as Photo[]);
+  };
+
+  React.useEffect(() => {
+    fetchPhotos();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,8 +78,8 @@ const PremiumPhotoUpload: React.FC = () => {
         category: 'Recentes',
       });
       
-      // Navigate back after animation
-      setTimeout(() => navigate('/gallery'), 2000);
+      fetchPhotos();
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       setError(err.message || 'Ocorreu um erro ao salvar a foto.');
     } finally {
@@ -184,6 +202,45 @@ const PremiumPhotoUpload: React.FC = () => {
             )}
           </motion.button>
         </form>
+
+        {/* Management List */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-black tracking-tight">Fotos na Galeria</h3>
+            <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+              {existingPhotos.length} Fotos
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {existingPhotos.map((photo) => (
+              <motion.div 
+                key={photo.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="group relative aspect-square rounded-3xl overflow-hidden border border-border-dark bg-card-dark"
+              >
+                <img src={photo.image_url} alt={photo.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 via-transparent to-transparent" />
+                
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-white truncate max-w-[70%]">{photo.title}</p>
+                  <button 
+                    onClick={async () => {
+                      if (window.confirm('Excluir esta foto?')) {
+                        await supabase.from('photos').delete().eq('id', photo.id);
+                        fetchPhotos();
+                      }
+                    }}
+                    className="p-2 rounded-xl bg-rose-500/20 text-rose-500 border border-rose-500/30 hover:bg-rose-500 transition-colors"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </motion.main>
     </div>
   );

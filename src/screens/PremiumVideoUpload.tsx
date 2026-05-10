@@ -10,7 +10,8 @@ import {
   CheckCircle2,
   Trash2,
   Plus,
-  Video
+  Video,
+  Star
 } from '../icons';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,6 +28,7 @@ const PremiumVideoUpload: React.FC = () => {
     video_url: '',
     category: 'Jiu-Jitsu',
     is_premium: false,
+    is_home_featured: false,
     duration: '10:00'
   });
 
@@ -64,7 +66,7 @@ const PremiumVideoUpload: React.FC = () => {
     try {
       const { error: supabaseError } = await supabase.from('videos').insert({
         title: formData.title,
-        video_url: formData.video_url, // Armazenamos a URL original ou apenas o ID
+        video_url: formData.video_url,
         thumbnail_url,
         category: formData.category,
         is_premium: formData.is_premium,
@@ -75,12 +77,23 @@ const PremiumVideoUpload: React.FC = () => {
 
       if (supabaseError) throw supabaseError;
 
+      // If featured on home, update site_assets
+      if (formData.is_home_featured) {
+        await supabase.from('site_assets').upsert({
+          asset_key: 'home_video',
+          url: formData.video_url,
+          description: formData.title,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'asset_key' });
+      }
+
       setSuccess(true);
       setFormData({
         title: '',
         video_url: '',
         category: 'Jiu-Jitsu',
         is_premium: false,
+        is_home_featured: false,
         duration: '10:00'
       });
       
@@ -176,6 +189,31 @@ const PremiumVideoUpload: React.FC = () => {
                   onChange={(e) => setFormData({...formData, duration: e.target.value})}
                   className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 text-sm font-medium focus:border-primary/50 outline-none transition-all text-center"
                 />
+              </div>
+            </div>
+
+            {/* Home Featured Toggle */}
+            <div 
+              onClick={() => setFormData({...formData, is_home_featured: !formData.is_home_featured})}
+              className={`p-6 rounded-3xl border cursor-pointer transition-all flex items-center justify-between group ${
+                formData.is_home_featured 
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 shadow-lg shadow-amber-500/50' 
+                  : 'bg-background-dark/40 border-border-dark text-slate-500 grayscale hover:grayscale-0'
+              }`}
+            >
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${formData.is_home_featured ? 'bg-amber-500 text-white' : 'bg-slate-800 text-slate-600'}`}>
+                  <Star size={20} />
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-widest">Destaque na Home</p>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">Este vídeo será o principal na tela inicial</p>
+                </div>
+              </div>
+              <div className={`size-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                formData.is_home_featured ? 'border-amber-500 bg-amber-500' : 'border-slate-700'
+              }`}>
+                {formData.is_home_featured && <CheckCircle2 size={14} className="text-white" />}
               </div>
             </div>
 
