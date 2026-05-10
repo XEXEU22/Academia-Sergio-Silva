@@ -625,7 +625,7 @@ const PremiumAdminOwner: React.FC = () => {
                   <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Gestão de horários e instrutores</p>
                 </div>
                 <button 
-                  onClick={() => navigate('/admin/schedule')}
+                  onClick={() => navigate('/admin/aulas')}
                   className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-xl text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all"
                 >
                   Editar Completo
@@ -640,10 +640,10 @@ const PremiumAdminOwner: React.FC = () => {
                   <h4 className="text-lg font-black text-white">Gerenciar Horários</h4>
                   <p className="text-xs text-slate-400 max-w-[200px]">Adicione novas aulas, altere horários ou cancele treinos específicos.</p>
                   <button 
-                    onClick={() => navigate('/admin/schedule')}
+                    onClick={() => navigate('/admin/aulas')}
                     className="w-full py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20"
                   >
-                    Acessar Editor de Agenda
+                    Acessar Editor de Aulas
                   </button>
                 </div>
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, Variants } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -6,11 +6,12 @@ import {
   Image as ImageIcon, 
   Save, 
   AlertCircle, 
-  CheckCircle2
+  CheckCircle2,
+  Trash2,
+  Filter
 } from '../icons';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Trash2 } from '../icons';
 
 interface Photo {
   id: string;
@@ -32,6 +33,7 @@ const PremiumPhotoUpload: React.FC = () => {
     category: 'Recentes',
   });
   const [existingPhotos, setExistingPhotos] = useState<Photo[]>([]);
+  const [managementFilter, setManagementFilter] = useState('Todas');
 
   const categories = ['Recentes', 'Instalações', 'Treinos', 'Momentos', 'Mental', 'Alunos', 'Mestres'];
 
@@ -40,7 +42,7 @@ const PremiumPhotoUpload: React.FC = () => {
     if (data) setExistingPhotos(data as Photo[]);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchPhotos();
   }, []);
 
@@ -87,6 +89,10 @@ const PremiumPhotoUpload: React.FC = () => {
     }
   };
 
+  const filteredPhotos = existingPhotos.filter(p => 
+    managementFilter === 'Todas' || p.category === managementFilter
+  );
+
   const containerVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
@@ -98,56 +104,51 @@ const PremiumPhotoUpload: React.FC = () => {
         <button onClick={() => navigate(-1)} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-slate-400 hover:text-white">
           <ChevronLeft size={20} />
         </button>
-        <h2 className="text-sm font-black tracking-[0.3em] uppercase">Gestão da Galeria</h2>
+        <h2 className="text-sm font-black tracking-[0.3em] uppercase text-primary">Gestão da Galeria</h2>
       </header>
 
       <motion.main 
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="flex-1 overflow-y-auto pb-32 px-6 pt-10 max-w-xl mx-auto w-full space-y-8"
+        className="flex-1 overflow-y-auto pb-32 px-6 pt-10 max-w-2xl mx-auto w-full space-y-12"
       >
         <div className="text-center space-y-2">
           <div className="size-16 rounded-[1.5rem] bg-primary/20 border-2 border-primary/40 flex items-center justify-center text-primary mx-auto shadow-2xl shadow-primary/20">
             <ImageIcon size={32} />
           </div>
-          <h1 className="text-3xl font-black tracking-tighter">Nova Foto</h1>
-          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Adicione uma nova foto à galeria imersiva</p>
+          <h1 className="text-3xl font-black tracking-tighter">Adicionar Mídia</h1>
+          <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Alimente a galeria com novos momentos</p>
         </div>
 
+        {/* Upload Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-6 bg-card-dark/50 border border-border-dark p-8 rounded-[2.5rem] backdrop-blur-sm">
-            {/* Title */}
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Título da Foto</label>
               <input 
                 type="text"
-                placeholder="Ex: Graduação 2026"
+                placeholder="Ex: Treino de Muay Thai Noite"
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
-                className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 text-sm font-medium focus:border-primary/50 focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 text-sm font-medium focus:border-primary/50 outline-none transition-all"
               />
             </div>
 
-            {/* Image URL */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Link da Imagem (URL pública)</label>
-              <div className="relative">
-                <input 
-                  required
-                  type="url"
-                  placeholder="https://exemplo.com/foto.jpg"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({...formData, image_url: e.target.value})}
-                  className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 pl-12 text-sm font-medium focus:border-primary/50 focus:ring-4 focus:ring-primary/5 outline-none transition-all"
-                />
-                <ImageIcon size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-              </div>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Link da Imagem (URL)</label>
+              <input 
+                required
+                type="url"
+                placeholder="https://images.unsplash.com/..."
+                value={formData.image_url}
+                onChange={(e) => setFormData({...formData, image_url: e.target.value})}
+                className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 text-sm font-medium focus:border-primary/50 outline-none transition-all"
+              />
             </div>
 
-            {/* Category */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Categoria</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Modalidade / Filtro</label>
               <select 
                 value={formData.category}
                 onChange={(e) => setFormData({...formData, category: e.target.value})}
@@ -158,81 +159,72 @@ const PremiumPhotoUpload: React.FC = () => {
             </div>
           </div>
 
-          {/* Feedback Messages */}
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0, x: -10 }} 
-              animate={{ opacity: 1, x: 0 }}
-              className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center gap-3"
-            >
-              <AlertCircle size={20} />
-              <p className="text-xs font-bold uppercase tracking-wide">{error}</p>
-            </motion.div>
-          )}
+          {error && <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[10px] font-black uppercase tracking-widest flex gap-2"><AlertCircle size={14}/> {error}</div>}
+          {success && <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-black uppercase tracking-widest flex gap-2"><CheckCircle2 size={14}/> Foto adicionada!</div>}
 
-          {success && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} 
-              animate={{ opacity: 1, scale: 1 }}
-              className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center gap-3"
-            >
-              <CheckCircle2 size={20} />
-              <p className="text-xs font-bold uppercase tracking-wide">Foto adicionada com sucesso! Redirecionando...</p>
-            </motion.div>
-          )}
-
-          {/* Submit Button */}
-          <motion.button
-            disabled={loading || success}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className={`w-full py-6 rounded-3xl font-black uppercase tracking-[0.4em] flex items-center justify-center gap-4 shadow-xl transition-all ${
-              loading || success 
-                ? 'bg-slate-800 text-slate-600 cursor-not-allowed' 
-                : 'bg-primary text-white shadow-primary/30 hover:shadow-primary/50'
-            }`}
+          <button
+            disabled={loading}
+            className="w-full py-5 rounded-[1.8rem] bg-primary text-white font-black uppercase tracking-[0.3em] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-98 transition-all flex items-center justify-center gap-3"
           >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <Save size={20} />
-                Publicar Foto
-              </>
-            )}
-          </motion.button>
+            {loading ? <RefreshCw className="animate-spin" size={20} /> : <><Save size={20} /> Publicar na Galeria</>}
+          </button>
         </form>
 
         {/* Management List */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-black tracking-tight">Fotos na Galeria</h3>
-            <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-              {existingPhotos.length} Fotos
-            </span>
+        <div className="space-y-6 pt-10 border-t border-border-dark">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-black tracking-tight flex items-center gap-2">
+                <Filter size={18} className="text-primary" />
+                Gerenciar Galeria
+              </h3>
+              <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                {filteredPhotos.length} {managementFilter !== 'Todas' ? managementFilter : 'Fotos'}
+              </span>
+            </div>
+            
+            <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
+               {['Todas', ...categories].map(c => (
+                 <button 
+                   key={c}
+                   onClick={() => setManagementFilter(c)}
+                   className={`shrink-0 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${
+                     managementFilter === c 
+                     ? 'bg-primary border-primary text-white shadow-lg' 
+                     : 'border-border-dark bg-card-dark text-slate-500 hover:text-white'
+                   }`}
+                 >
+                   {c}
+                 </button>
+               ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {existingPhotos.map((photo) => (
+            {filteredPhotos.map((photo) => (
               <motion.div 
                 key={photo.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="group relative aspect-square rounded-3xl overflow-hidden border border-border-dark bg-card-dark"
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="group relative aspect-square rounded-3xl overflow-hidden border border-border-dark bg-card-dark shadow-xl"
               >
                 <img src={photo.image_url} alt={photo.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
                 
                 <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-white truncate max-w-[70%]">{photo.title}</p>
+                  <div className="truncate pr-2">
+                    <p className="text-[8px] font-black text-primary uppercase tracking-widest">{photo.category}</p>
+                    <p className="text-[9px] font-bold text-white truncate">{photo.title}</p>
+                  </div>
                   <button 
                     onClick={async () => {
-                      if (window.confirm('Excluir esta foto?')) {
-                        await supabase.from('photos').delete().eq('id', photo.id);
-                        fetchPhotos();
+                      if (window.confirm('Excluir esta foto permanentemente?')) {
+                        const { error } = await supabase.from('photos').delete().eq('id', photo.id);
+                        if (!error) fetchPhotos();
                       }
                     }}
-                    className="p-2 rounded-xl bg-rose-500/20 text-rose-500 border border-rose-500/30 hover:bg-rose-500 transition-colors"
+                    className="p-2 rounded-xl bg-rose-500/20 text-rose-500 border border-rose-500/30 hover:bg-rose-500 hover:text-white transition-all shadow-lg"
                   >
                     <Trash2 size={12} />
                   </button>
@@ -240,8 +232,15 @@ const PremiumPhotoUpload: React.FC = () => {
               </motion.div>
             ))}
           </div>
+
+          {filteredPhotos.length === 0 && (
+            <div className="py-20 text-center border border-dashed border-border-dark rounded-3xl">
+               <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest">Nenhuma foto nesta categoria.</p>
+            </div>
+          )}
         </div>
       </motion.main>
+      <BottomNav />
     </div>
   );
 };

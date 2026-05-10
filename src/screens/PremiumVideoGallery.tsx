@@ -27,7 +27,7 @@ const PremiumVideoGallery: React.FC = () => {
   useEffect(() => {
     async function fetchVideos() {
       setLoading(true);
-      let query = supabase.from('videos').select('*, profiles(full_name)');
+      let query = supabase.from('videos').select('*, profiles(full_name)').order('created_at', { ascending: false });
       if (selectedFilter !== 'Todos') {
         query = query.eq('category', selectedFilter);
       }
