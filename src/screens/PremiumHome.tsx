@@ -23,7 +23,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const PremiumHome: React.FC = () => {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [homeBanner, setHomeBanner] = React.useState('https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=1200&auto=format&fit=crop');
   const [showUserMenu, setShowUserMenu] = React.useState(false);
 
@@ -145,7 +145,11 @@ const PremiumHome: React.FC = () => {
                 </button>
                 <div className="h-px w-full bg-border-dark my-1" />
                 <button 
-                  onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }} 
+                  onClick={async () => { 
+                    setShowUserMenu(false);
+                    await signOut(); 
+                    navigate('/welcome');
+                  }} 
                   className="w-full px-4 py-3 text-left text-xs font-bold text-rose-500 hover:bg-rose-500/10 flex items-center gap-3 transition-colors uppercase tracking-widest"
                 >
                   <LogOut size={16} /> Sair da Conta
