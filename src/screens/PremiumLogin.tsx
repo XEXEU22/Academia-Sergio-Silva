@@ -45,16 +45,21 @@ const PremiumLogin: React.FC = () => {
       localStorage.removeItem('remembered_email');
     }
 
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (signInError) {
-      setError(signInError.message);
+      if (signInError) {
+        setError(signInError.message);
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Erro inesperado ao conectar.');
+    } finally {
       setLoading(false);
-    } else {
-      navigate('/dashboard');
     }
   };
 

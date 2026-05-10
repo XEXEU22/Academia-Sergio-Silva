@@ -2,10 +2,12 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Home, Calendar, Video, User, Bell, Image as ImageIcon, Dumbbell, Zap, GraduationCap } from '../icons';
+import { useAuth } from '../contexts/AuthContext';
 
 const BottomNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const navItems = [
     { path: '/', label: 'Home', icon: Home },
@@ -40,6 +42,9 @@ const BottomNav: React.FC = () => {
               
               <div className={`relative z-10 transition-all duration-300 ${isActive ? 'text-primary scale-110' : 'text-slate-600 group-hover:text-slate-300'}`}>
                 <Icon size={22} strokeWidth={isActive ? 3 : 2} className={isActive ? 'fill-current/10' : ''} />
+                {item.label === 'Aluno' && user && (
+                  <span className="absolute -top-1 -right-1 size-2.5 bg-green-500 rounded-full border-2 border-background-dark shadow-sm shadow-green-500/50" />
+                )}
               </div>
               
               <p className={`relative z-10 text-[9px] uppercase tracking-[0.2em] transition-all duration-300 ${isActive ? 'font-black text-primary' : 'font-bold text-slate-600 group-hover:text-slate-400'}`}>

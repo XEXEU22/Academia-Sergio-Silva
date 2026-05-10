@@ -18,9 +18,11 @@ import {
 } from '../icons';
 import BottomNav from '../components/BottomNav';
 import { supabase } from '../supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 const PremiumHome: React.FC = () => {
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
   const [homeBanner, setHomeBanner] = React.useState('https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=1200&auto=format&fit=crop');
 
   React.useEffect(() => {
@@ -104,10 +106,13 @@ const PremiumHome: React.FC = () => {
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/instructor')}
-            className="size-10 rounded-xl border border-white/10 p-0.5 overflow-hidden bg-background-dark group"
+            onClick={() => navigate(user ? '/dashboard' : '/instructor')}
+            className="size-10 rounded-xl border border-white/10 p-0.5 overflow-hidden bg-background-dark group relative"
           >
-             <img src="https://ui-avatars.com/api/?name=S+S&background=FF6B00&color=fff" className="w-full h-full object-cover rounded-[0.5rem] opacity-80 group-hover:opacity-100 transition-opacity" alt="Mestre" />
+             <img src={`https://ui-avatars.com/api/?name=${user ? (profile?.full_name?.substring(0,2) || 'A') : 'S+S'}&background=FF6B00&color=fff`} className="w-full h-full object-cover rounded-[0.5rem] opacity-80 group-hover:opacity-100 transition-opacity" alt="Avatar" />
+             {user && (
+               <div className="absolute -bottom-1 -right-1 size-3.5 bg-green-500 rounded-full border-2 border-background-dark shadow-sm shadow-green-500/50" />
+             )}
           </motion.button>
         </div>
       </header>
@@ -291,11 +296,19 @@ const PremiumHome: React.FC = () => {
           
           {/* Footer CTA */}
           <section className="pt-8 text-center pb-12 border-t border-border-dark space-y-6">
-             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Deseja Expandir seu Legado?</p>
+             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+               {user ? `Bem-vindo de volta, ${profile?.full_name?.split(' ')[0] || 'Guerreiro'}` : 'Deseja Expandir seu Legado?'}
+             </p>
              <div className="flex items-center justify-center gap-12">
-                <button onClick={() => navigate('/register')} className="text-primary font-black text-xl uppercase tracking-tighter hover:scale-110 transition-transform">Inscrição</button>
-                <div className="h-8 w-[1px] bg-white/10" />
-                <button onClick={() => navigate('/login')} className="text-white font-black text-xl uppercase tracking-tighter hover:scale-110 transition-transform">Acesso</button>
+               {user ? (
+                 <button onClick={() => navigate('/dashboard')} className="text-primary font-black text-xl uppercase tracking-tighter hover:scale-110 transition-transform">Meu Painel</button>
+               ) : (
+                 <>
+                   <button onClick={() => navigate('/register')} className="text-primary font-black text-xl uppercase tracking-tighter hover:scale-110 transition-transform">Inscrição</button>
+                   <div className="h-8 w-[1px] bg-white/10" />
+                   <button onClick={() => navigate('/login')} className="text-white font-black text-xl uppercase tracking-tighter hover:scale-110 transition-transform">Acesso</button>
+                 </>
+               )}
              </div>
           </section>
         </div>
