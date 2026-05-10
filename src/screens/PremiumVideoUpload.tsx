@@ -35,6 +35,7 @@ const PremiumVideoUpload: React.FC = () => {
     duration: '10:00'
   });
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [autoThumbnail, setAutoThumbnail] = useState<string | null>(null); // To store the base64 or blob URL of the captured frame
   const [uploadProgress, setUploadProgress] = useState(0);
   const [currentHomeVideo, setCurrentHomeVideo] = useState<{title: string} | null>(null);
 
@@ -55,6 +56,37 @@ const PremiumVideoUpload: React.FC = () => {
   };
 
   const getThumbnailUrl = (id: string) => `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+
+  const generateThumbnail = (file: File) => {
+    const video = document.createElement('video');
+    const canvas = document.createElement('canvas');
+    const url = URL.createObjectURL(file);
+
+    video.src = url;
+    video.currentTime = 2; // Capture frame at 2 seconds
+    video.muted = true;
+    video.playsInline = true;
+
+    video.onloadeddata = () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      setAutoThumbnail(dataUrl);
+      URL.revokeObjectURL(url);
+    };
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setVideoFile(file);
+    if (file) {
+      generateThumbnail(file);
+    } else {
+      setAutoThumbnail(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +129,34 @@ const PremiumVideoUpload: React.FC = () => {
     }
 
     const videoId = extractYoutubeId(finalVideoUrl);
-    const thumbnail_url = formData.thumbnail_url || (videoId ? getThumbnailUrl(videoId) : 'https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop');
+    let thumbnail_url = formData.thumbnail_url;
+
+    // If no custom thumbnail, but we have an auto-generated one from file
+    if (!thumbnail_url && autoThumbnail && videoFile) {
+      try {
+        // Convert dataURL to Blob
+        const response = await fetch(autoThumbnail);
+        const blob = await response.blob();
+        const thumbName = `thumbs/${Math.random()}.jpg`;
+        
+        const { error: thumbError } = await supabase.storage
+          .from('media')
+          .upload(thumbName, blob);
+        
+        if (!thumbError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('media')
+            .getPublicUrl(thumbName);
+          thumbnail_url = publicUrl;
+        }
+      } catch (e) {
+        console.error('Erro ao subir thumbnail automática:', e);
+      }
+    }
+
+    if (!thumbnail_url) {
+      thumbnail_url = videoId ? getThumbnailUrl(videoId) : 'https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop';
+    }
 
     try {
       const { error: supabaseError } = await supabase.from('videos').insert({
@@ -141,6 +200,8 @@ const PremiumVideoUpload: React.FC = () => {
         is_home_featured: false,
         duration: '10:00'
       });
+      setVideoFile(null);
+      setAutoThumbnail(null);
       
       // Navigate back after animation
       setTimeout(() => navigate('/videos'), 2000);
@@ -212,7 +273,7 @@ const PremiumVideoUpload: React.FC = () => {
                   <input 
                     type="file" 
                     accept="video/*" 
-                    onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                    onChange={handleFileChange}
                     className="absolute inset-0 opacity-0 cursor-pointer"
                   />
                   <button
@@ -227,12 +288,27 @@ const PremiumVideoUpload: React.FC = () => {
               </div>
 
               {videoFile ? (
-                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Video size={18} className="text-primary" />
-                    <span className="text-xs font-bold text-white truncate max-w-[150px]">{videoFile.name}</span>
+                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Video size={18} className="text-primary" />
+                      <span className="text-xs font-bold text-white truncate max-w-[150px]">{videoFile.name}</span>
+                    </div>
+                    <button onClick={() => { setVideoFile(null); setAutoThumbnail(null); }} className="text-[10px] font-black text-rose-500 uppercase">Remover</button>
                   </div>
-                  <button onClick={() => setVideoFile(null)} className="text-[10px] font-black text-rose-500 uppercase">Remover</button>
+                  
+                  {/* Thumbnail Preview */}
+                  {autoThumbnail && !formData.thumbnail_url && (
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Capa capturada automaticamente:</p>
+                      <div className="relative aspect-video rounded-xl overflow-hidden border border-white/10">
+                        <img src={autoThumbnail} alt="Preview" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                          <CheckCircle2 size={24} className="text-emerald-500" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="relative">
