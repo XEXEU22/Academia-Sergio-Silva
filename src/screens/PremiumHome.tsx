@@ -232,23 +232,40 @@ const PremiumHome: React.FC = () => {
                variants={itemVariants}
                whileHover={{ y: -5 }}
                onClick={() => {
-                 if (homeVideo?.url) {
-                   window.open(homeVideo.url, '_blank');
-                 } else {
+                 if (!homeVideo?.url) {
                    navigate('/gallery');
                  }
                }}
-               className="relative rounded-[2.5rem] overflow-hidden bg-card-dark border border-border-dark shadow-2xl shadow-primary/5 aspect-video cursor-pointer"
+               className="relative rounded-[2.5rem] overflow-hidden bg-card-dark border border-border-dark shadow-2xl shadow-primary/5 aspect-video cursor-default"
              >
-                <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/20 to-transparent z-10" />
-                <img 
-                  src={homeVideo?.thumbnail || "https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop"} 
-                  alt="Teaser" 
-                  className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop";
-                  }}
-                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/20 to-transparent z-10 pointer-events-none" />
+                
+                {homeVideo?.url ? (
+                  homeVideo.url.includes('youtube.com') || homeVideo.url.includes('youtu.be') ? (
+                    <iframe
+                      className="absolute inset-0 w-[100.5%] h-[100.5%] border-none opacity-60 pointer-events-none scale-105"
+                      src={`https://www.youtube.com/embed/${homeVideo.url.match(/(?:v=|\/)([0-9A-Za-z_-]{11}).*/)?.[1]}?autoplay=1&mute=1&loop=1&playlist=${homeVideo.url.match(/(?:v=|\/)([0-9A-Za-z_-]{11}).*/)?.[1]}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
+                      allow="autoplay; encrypted-media"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="absolute inset-0 w-full h-full object-cover opacity-60"
+                    >
+                      <source src={homeVideo.url} type="video/mp4" />
+                    </video>
+                  )
+                ) : (
+                  <img 
+                    src="https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop" 
+                    alt="Teaser" 
+                    className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
+                  />
+                )}
                 
                 <div className="absolute inset-0 z-20 flex items-center justify-center">
                    <div className="size-16 rounded-full bg-white/5 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white shadow-2xl group-hover:scale-110 active:scale-95 transition-all">
