@@ -7,10 +7,9 @@ import {
   Clock,
   User,
   Filter,
-  Users,
-  Award,
   Calendar as CalendarIcon,
   RefreshCw,
+  Award,
   CheckCircle2
 } from '../icons';
 import BottomNav from '../components/BottomNav';
@@ -21,16 +20,13 @@ const CATEGORIES = ['Todos', 'Muay Thai', 'Wing Chun', 'Kickboxing', 'Karatê', 
 const DAYS_ABBR = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
-const PremiumSchedule: React.FC = () => {
+const PremiumClasses: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState('Todos');
-  const [enrolling, setEnrolling] = useState<string | null>(null);
-  const [enrolledIds, setEnrolledIds] = useState<Set<string>>(new Set());
-  const [myEnrollments, setMyEnrollments] = useState<any[]>([]); // New state for full enrollment data
-  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [myEnrollments, setMyEnrollments] = useState<any[]>([]);
 
   // Date navigation
   const today = new Date();
@@ -47,11 +43,6 @@ const PremiumSchedule: React.FC = () => {
     d.setDate(currentWeekStart.getDate() + i);
     return d;
   });
-
-  const showToast = (msg: string, ok = true) => {
-    setToast({ msg, ok });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   useEffect(() => {
     fetchClasses();
@@ -88,36 +79,12 @@ const PremiumSchedule: React.FC = () => {
       .eq('status', 'confirmed');
     
     if (data) {
-      setEnrolledIds(new Set(data.map((e: any) => e.class_id)));
-      // Filter for upcoming only (today onwards)
       const now = new Date();
       const upcoming = data
         .filter((e: any) => new Date(e.classes.start_time) >= now)
         .sort((a: any, b: any) => new Date(a.classes.start_time).getTime() - new Date(b.classes.start_time).getTime());
       setMyEnrollments(upcoming);
     }
-  };
-
-  const handleEnroll = async (cls: any) => {
-    if (!user) { navigate('/login'); return; }
-    if (enrolledIds.has(cls.id)) { showToast('Você já está inscrito nesta aula!', false); return; }
-    if (cls.status === 'full') { showToast('Aula lotada!', false); return; }
-
-    setEnrolling(cls.id);
-    const { error } = await supabase.from('enrollments').insert({
-      user_id: user.id,
-      class_id: cls.id,
-      status: 'confirmed'
-    });
-
-    if (error) {
-      showToast('Erro ao reservar. Tente novamente.', false);
-    } else {
-      setEnrolledIds(prev => new Set([...prev, cls.id]));
-      fetchEnrollments(); // Refresh the top list
-      showToast('Vaga reservada com sucesso! ✅');
-    }
-    setEnrolling(null);
   };
 
   const filteredClasses = classes.filter(c =>
@@ -129,22 +96,6 @@ const PremiumSchedule: React.FC = () => {
 
   return (
     <div className="bg-background-dark min-h-screen flex flex-col text-slate-100 font-display">
-      {/* Toast */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className={`fixed top-4 left-1/2 -translate-x-1/2 z-[200] px-5 py-3 rounded-2xl text-xs font-black shadow-2xl ${
-              toast.ok ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
-            }`}
-          >
-            {toast.msg}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Header */}
       <header className="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-border-dark">
         <button onClick={() => navigate(-1)} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">
@@ -152,7 +103,7 @@ const PremiumSchedule: React.FC = () => {
         </button>
         <div className="flex flex-col items-center">
           <h2 className="text-[10px] font-black tracking-[0.4em] uppercase text-slate-500">Arte de Lutar</h2>
-          <span className="text-sm font-black uppercase text-white">Agenda de Aulas</span>
+          <span className="text-sm font-black uppercase text-white">Grade de Aulas</span>
         </div>
         <button onClick={fetchClasses} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-primary">
           <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
@@ -182,7 +133,6 @@ const PremiumSchedule: React.FC = () => {
                     transition={{ delay: idx * 0.1 }}
                     className="shrink-0 w-72 p-5 rounded-[2rem] bg-gradient-to-br from-primary to-primary-dark border border-primary/30 shadow-xl shadow-primary/20 relative overflow-hidden group"
                   >
-                    {/* Decorative Zap */}
                     <div className="absolute -right-4 -top-4 size-24 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all" />
                     
                     <div className="flex items-center justify-between mb-4 relative z-10">
@@ -221,6 +171,7 @@ const PremiumSchedule: React.FC = () => {
             </div>
           </section>
         )}
+
         {/* Month + Week Navigation */}
         <section className="px-6 pt-8 pb-4">
           <div className="flex items-center justify-between mb-5">
@@ -295,7 +246,7 @@ const PremiumSchedule: React.FC = () => {
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-black tracking-tight flex items-center gap-2 text-white">
               <Clock size={16} className="text-primary" />
-              Aulas do Dia
+              Horários Disponíveis
             </h3>
             <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
               {loading ? '...' : `${filteredClasses.length} resultado(s)`}
@@ -305,7 +256,7 @@ const PremiumSchedule: React.FC = () => {
           {loading ? (
             <div className="py-16 flex flex-col items-center justify-center gap-3 text-primary">
               <div className="w-8 h-8 rounded-full border-[3px] border-primary border-t-transparent animate-spin" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Carregando aulas...</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Carregando horários...</span>
             </div>
           ) : filteredClasses.length === 0 ? (
             <div className="py-16 text-center space-y-3">
@@ -318,8 +269,6 @@ const PremiumSchedule: React.FC = () => {
               {filteredClasses.map((cls, i) => {
                 const start = new Date(cls.start_time);
                 const end = new Date(start.getTime() + cls.duration_minutes * 60000);
-                const isEnrolled = enrolledIds.has(cls.id);
-                const isFull = cls.status === 'full';
 
                 return (
                   <motion.div
@@ -327,15 +276,12 @@ const PremiumSchedule: React.FC = () => {
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className={`p-5 rounded-[2.5rem] border transition-all ${
-                      isFull ? 'bg-card-dark/40 border-border-dark opacity-50' : 'bg-card-dark border-border-dark hover:border-primary/30'
-                    }`}
+                    className="p-5 rounded-[2.5rem] border bg-card-dark border-border-dark hover:border-primary/30 transition-all"
                   >
-                    {/* Time + Status Row */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className={`p-3 rounded-2xl ${isFull ? 'bg-slate-800' : 'bg-primary/10 border border-primary/20'}`}>
-                          <Clock size={18} className={isFull ? 'text-slate-600' : 'text-primary'} />
+                        <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20">
+                          <Clock size={18} className="text-primary" />
                         </div>
                         <div>
                           <p className="text-lg font-black text-white">
@@ -347,53 +293,22 @@ const PremiumSchedule: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end gap-1">
-                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-                          isFull
-                            ? 'border-red-500/20 text-red-400 bg-red-500/5'
-                            : isEnrolled
-                            ? 'border-emerald-500/20 text-emerald-400 bg-emerald-500/5'
-                            : 'border-emerald-500/20 text-emerald-400 bg-emerald-500/5'
-                        }`}>
-                          {isFull ? 'Lotado' : isEnrolled ? 'Inscrito' : `${cls.max_spots} vagas`}
-                        </span>
-                        <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/5 text-slate-500">
-                          {cls.category}
-                        </span>
-                      </div>
+                      <span className="text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-white/5 text-slate-500 border border-white/5">
+                        {cls.category}
+                      </span>
                     </div>
 
-                    {/* Title + Instructor + Level */}
-                    <div className="mb-5">
+                    <div>
                       <h4 className="text-base font-black text-white mb-2 tracking-tight">{cls.title}</h4>
                       <div className="flex items-center gap-4 flex-wrap">
                         <span className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                          <User size={12} /> {cls.profiles?.full_name || 'Instrutor'}
+                          <User size={12} /> {cls.profiles?.full_name || 'Mestre Sérgio'}
                         </span>
                         <span className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                           <Award size={12} /> {cls.level}
                         </span>
                       </div>
                     </div>
-
-                    {/* CTA Button */}
-                    <button
-                      disabled={isFull || !!enrolling || isEnrolled}
-                      onClick={() => handleEnroll(cls)}
-                      className={`w-full py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] transition-all active:scale-95 flex items-center justify-center gap-2 ${
-                        isEnrolled
-                          ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 cursor-default'
-                          : isFull
-                          ? 'bg-slate-800 text-slate-600 cursor-not-allowed border border-white/5'
-                          : 'bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-primary/50'
-                      }`}
-                    >
-                      {enrolling === cls.id ? (
-                        <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                      ) : isEnrolled ? (
-                        <><CheckCircle2 size={16} /> Você está inscrito</>
-                      ) : isFull ? 'Aula Lotada' : 'Reservar Vaga'}
-                    </button>
                   </motion.div>
                 );
               })}
@@ -407,4 +322,4 @@ const PremiumSchedule: React.FC = () => {
   );
 };
 
-export default PremiumSchedule;
+export default PremiumClasses;

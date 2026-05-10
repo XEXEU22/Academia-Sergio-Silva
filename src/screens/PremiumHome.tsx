@@ -292,7 +292,7 @@ const PremiumHome: React.FC = () => {
                variants={itemVariants}
                whileHover={{ scale: 1.02 }}
                whileTap={{ scale: 0.98 }}
-               onClick={() => navigate('/schedule')}
+               onClick={() => navigate('/aulas')}
                className="w-full h-20 bg-primary rounded-[1.8rem] flex items-center justify-center gap-4 text-xs font-black uppercase tracking-[0.3em] shadow-xl shadow-primary/30 relative overflow-hidden group"
              >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

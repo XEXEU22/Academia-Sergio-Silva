@@ -74,10 +74,10 @@ const PremiumAdminDashboard: React.FC = () => {
             badgeColor: 'bg-red-500/20 text-red-400'
         },
         { 
-            title: 'Agenda de Aulas', 
+            title: 'Gestão de Aulas', 
             icon: CalendarDays, 
             desc: 'Criar e editar horários de treino', 
-            path: '/admin/schedule', 
+            path: '/admin/aulas', 
             color: 'bg-pink-500/10 text-pink-400',
             badge: stats.classes > 0 ? `${stats.classes} aulas` : null,
             badgeColor: 'bg-pink-500/20 text-pink-400'

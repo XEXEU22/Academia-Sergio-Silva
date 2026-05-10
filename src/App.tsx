@@ -6,7 +6,7 @@ import PremiumLogin from './screens/PremiumLogin';
 import PremiumRegister from './screens/PremiumRegister';
 import PremiumForgotPassword from './screens/PremiumForgotPassword';
 import PremiumDashboard from './screens/PremiumDashboard';
-import PremiumSchedule from './screens/PremiumSchedule';
+import PremiumClasses from './screens/PremiumClasses';
 import PremiumPlans from './screens/PremiumPlans';
 import PremiumVideoGallery from './screens/PremiumVideoGallery';
 import PremiumInstructorProfile from './screens/PremiumInstructorProfile';
@@ -22,7 +22,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AuthCallback from './screens/AuthCallback';
 import PremiumAssetManagement from './screens/PremiumAssetManagement';
 import PremiumAdminStudents from './screens/PremiumAdminStudents';
-import PremiumAdminSchedule from './screens/PremiumAdminSchedule';
+import PremiumAdminClasses from './screens/PremiumAdminClasses';
 import PremiumAdminOwner from './screens/PremiumAdminOwner';
 import PremiumAdminPlans from './screens/PremiumAdminPlans';
 import PremiumDirectAdmin from './screens/PremiumDirectAdmin';
@@ -43,7 +43,7 @@ export default function App() {
               <PremiumDashboard />
             </ProtectedRoute>
           } />
-          <Route path="/schedule" element={<PremiumSchedule />} />
+          <Route path="/aulas" element={<PremiumClasses />} />
           <Route path="/plans" element={<PremiumPlans />} />
           <Route path="/videos" element={<PremiumVideoGallery />} />
           <Route path="/gallery" element={<PremiumPhotoGallery />} />
@@ -82,9 +82,9 @@ export default function App() {
               <PremiumAdminStudents />
             </ProtectedRoute>
           } />
-          <Route path="/admin/schedule" element={
+          <Route path="/admin/aulas" element={
             <ProtectedRoute allowedRoles={['admin']}>
-              <PremiumAdminSchedule />
+              <PremiumAdminClasses />
             </ProtectedRoute>
           } />
           <Route path="/admin/plans" element={

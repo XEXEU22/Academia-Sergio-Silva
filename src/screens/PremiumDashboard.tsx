@@ -181,7 +181,7 @@ const PremiumDashboard: React.FC = () => {
         {/* Quick Actions Grid */}
         <section className="grid grid-cols-2 gap-4">
           {[
-            { icon: Calendar, label: 'Agendar', color: 'bg-primary/10 text-primary', desc: 'Próxima Aula', path: '/schedule' },
+            { icon: Calendar, label: 'Ver Aulas', color: 'bg-primary/10 text-primary', desc: 'Grade Horária', path: '/aulas' },
             { icon: TrendingUp, label: 'Evolução', color: 'bg-emerald-500/10 text-emerald-400', desc: 'Estatísticas' },
             { icon: ImageIcon, label: 'Galeria', color: 'bg-primary/10 text-primary', desc: 'Momentos', path: '/gallery' },
             { icon: isAdmin ? ShieldCheck : Trophy, label: isAdmin ? 'Admin' : 'Conquistas', color: isAdmin ? 'bg-indigo-500/10 text-indigo-400' : 'bg-amber-500/10 text-amber-400', desc: isAdmin ? 'Acesso Master' : '8 Medalhas', path: isAdmin ? '/admin' : undefined },
@@ -208,7 +208,7 @@ const PremiumDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold tracking-tight">Sua Próxima Batalha</h3>
             <button 
-               onClick={() => navigate('/schedule')}
+               onClick={() => navigate('/aulas')}
                className="text-primary text-xs font-bold uppercase tracking-wider flex items-center gap-1 hover:gap-2 transition-all"
             >
               Ver Agenda <ChevronRight size={14} />

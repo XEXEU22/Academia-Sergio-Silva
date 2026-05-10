@@ -1,20 +1,44 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 🥋 Academia Sergio Silva — Arte da Defesa Pessoal
 
-# Run and deploy your AI Studio app
+Este projeto é uma aplicação web premium para a gestão da Academia de Artes Marciais do Mestre Sérgio. Desenvolvido com **React**, **Vite**, **TailwindCSS** e integrado com **Supabase** (Banco de Dados e Auth) e **Vercel** (Hospedagem).
 
-This contains everything you need to run your app locally.
+## 🚀 Tecnologias
 
-View your app in AI Studio: https://ai.studio/apps/3c6e5ce5-7edb-4341-91be-9f81d8026971
+- **Frontend**: React 19 + TypeScript
+- **Estilização**: TailwindCSS + Framer Motion (animações premium)
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **Deploy**: Vercel
+- **Automação**: Script de auto-deploy para GitHub
 
-## Run Locally
+## ⚙️ Configuração Local
 
-**Prerequisites:**  Node.js
+1.  **Clone o repositório**
+2.  **Instale as dependências**:
+    ```bash
+    npm install
+    ```
+3.  **Configure as Variáveis de Ambiente**:
+    Crie um arquivo `.env` na raiz do projeto (use o `.env.example` como base) e preencha com suas credenciais do Supabase e Gemini.
+4.  **Inicie o servidor de desenvolvimento**:
+    ```bash
+    npm run dev
+    ```
 
+## 📦 Deploy e CI/CD
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+O projeto está configurado para deploy automático na **Vercel** via GitHub.
+
+### Auto-Deploy
+Para facilitar o desenvolvimento, use o script de auto-deploy que monitora alterações e faz o push automaticamente:
+```bash
+npm run auto-deploy
+```
+*Toda vez que você salvar um arquivo nas pastas `src`, `supabase` ou `public`, o script fará um commit e push automático após 4 segundos de inatividade.*
+
+## 🗄️ Supabase Setup
+
+Para configurar o banco de dados, siga as instruções em [SUPABASE_GUIDE.md](./SUPABASE_GUIDE.md). As migrações de esquema e dados iniciais estão localizadas na pasta `/supabase`.
+
+## 📄 Licença
+
+Privado para Academia Sergio Silva.

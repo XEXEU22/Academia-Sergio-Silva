@@ -188,7 +188,7 @@ const PremiumInstructorProfile: React.FC = () => {
               <Calendar className="text-primary" size={20} />
               Agenda Próxima
             </h3>
-            <button className="text-primary text-[10px] font-black uppercase tracking-widest" onClick={() => navigate('/schedule')}>Abrir Calendário</button>
+            <button className="text-primary text-[10px] font-black uppercase tracking-widest" onClick={() => navigate('/aulas')}>Abrir Calendário</button>
           </div>
           
           <div className="space-y-4">
