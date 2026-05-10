@@ -16,6 +16,7 @@ import PremiumNotificationSettings from './screens/PremiumNotificationSettings';
 import PremiumChangePassword from './screens/PremiumChangePassword';
 import PremiumPaymentSuccess from './screens/PremiumPaymentSuccess';
 import PremiumVideoUpload from './screens/PremiumVideoUpload';
+import PremiumPhotoUpload from './screens/PremiumPhotoUpload';
 import PremiumAdminDashboard from './screens/PremiumAdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthCallback from './screens/AuthCallback';
@@ -53,6 +54,11 @@ export default function App() {
           <Route path="/upload-video" element={
             <ProtectedRoute allowedRoles={['admin', 'instructor']}>
               <PremiumVideoUpload />
+            </ProtectedRoute>
+          } />
+          <Route path="/upload-photo" element={
+            <ProtectedRoute allowedRoles={['admin', 'instructor']}>
+              <PremiumPhotoUpload />
             </ProtectedRoute>
           } />
           <Route path="/admin" element={

@@ -21,6 +21,8 @@ import {
   Award,
   Calendar,
   Image as ImageIcon,
+  Image,
+  Play,
   Save
 } from '../icons';
 
@@ -42,7 +44,7 @@ interface OwnerData {
 const PremiumAdminOwner: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'students' | 'reservations' | 'notifications' | 'photo' | 'schedule'>('students');
+  const [activeTab, setActiveTab] = useState<'students' | 'reservations' | 'notifications' | 'photo' | 'schedule' | 'videos' | 'gallery'>('students');
   const [data, setData] = useState<OwnerData>({
     students: [],
     enrollments: [],
@@ -237,8 +239,10 @@ const PremiumAdminOwner: React.FC = () => {
             { id: 'students', label: 'Alunos', icon: Users },
             { id: 'schedule', label: 'Agenda', icon: Calendar },
             { id: 'reservations', label: 'Reservas', icon: CalendarDays },
+            { id: 'videos', label: 'Vídeos', icon: Play },
+            { id: 'photo', label: 'Mestre', icon: ImageIcon },
+            { id: 'gallery', label: 'Galeria', icon: Image },
             { id: 'notifications', label: 'Avisos', icon: Bell },
-            { id: 'photo', label: 'Foto', icon: ImageIcon },
           ].map(tab => (
             <button
               key={tab.id}
@@ -433,6 +437,57 @@ const PremiumAdminOwner: React.FC = () => {
               )}
             </motion.section>
           )}
+
+          {activeTab === 'videos' && (
+            <motion.section
+              key="videos"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="space-y-6"
+            >
+              <div className="space-y-2">
+                <h3 className="text-base font-black text-white">Gerenciador de Vídeos</h3>
+                <p className="text-xs text-slate-500">Adicione novos treinos do YouTube na aba de Vídeos para os alunos.</p>
+              </div>
+              <button
+                onClick={() => navigate('/upload-video')}
+                className="w-full py-5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 bg-primary text-white shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all"
+              >
+                <Play size={16} /> Subir Novo Vídeo
+              </button>
+            </motion.section>
+          )}
+
+          {activeTab === 'gallery' && (
+            <motion.section
+              key="gallery"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="space-y-6"
+            >
+              <div className="space-y-2">
+                <h3 className="text-base font-black text-white">Gerenciador da Galeria</h3>
+                <p className="text-xs text-slate-500">Suba novas fotos para a galeria ou gerencie as imagens principais do sistema.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => navigate('/upload-photo')}
+                  className="w-full py-5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] flex flex-col items-center justify-center gap-3 bg-primary text-white shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all"
+                >
+                  <Image size={24} /> Nova Foto
+                </button>
+                <button
+                  onClick={() => navigate('/admin/assets')}
+                  className="w-full py-5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] flex flex-col items-center justify-center gap-3 bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
+                >
+                  <ImageIcon size={24} /> Assets do Site
+                </button>
+              </div>
+            </motion.section>
+          )}
+
           {activeTab === 'photo' && (
             <motion.section
               key="photo"

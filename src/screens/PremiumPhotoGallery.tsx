@@ -196,7 +196,7 @@ const PremiumPhotoGallery: React.FC = () => {
               <h3 className="text-lg font-black tracking-widest uppercase mb-2">Contribua com a Galeria</h3>
               <p className="text-slate-500 text-xs font-medium">Capture momentos do Tatame e compartilhe com a comunidade.</p>
            </div>
-           <button className="px-8 py-4 bg-white text-background-dark rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-transform font-bold">
+           <button onClick={() => navigate('/upload-photo')} className="px-8 py-4 bg-white text-background-dark rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-transform font-bold">
               Enviar Mídia
            </button>
         </motion.section>
