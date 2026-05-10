@@ -25,7 +25,7 @@ const PremiumHome: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const [homeBanner, setHomeBanner] = React.useState('https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=1200&auto=format&fit=crop');
-  const [homeVideo, setHomeVideo] = React.useState<{url: string, title: string} | null>(null);
+  const [homeVideo, setHomeVideo] = React.useState<{url: string, title: string, thumbnail?: string} | null>(null);
   const [showUserMenu, setShowUserMenu] = React.useState(false);
 
   React.useEffect(() => {
@@ -47,9 +47,17 @@ const PremiumHome: React.FC = () => {
         .single();
       
       if (videoData?.url) {
+        // Fetch Thumbnail
+        const { data: thumbData } = await supabase
+          .from('site_assets')
+          .select('url')
+          .eq('asset_key', 'home_video_thumbnail')
+          .single();
+
         setHomeVideo({
           url: videoData.url,
-          title: videoData.description || 'Aula de Defesa Pessoal'
+          title: videoData.description || 'Aula de Defesa Pessoal',
+          thumbnail: thumbData?.url
         });
       }
     };
@@ -234,7 +242,7 @@ const PremiumHome: React.FC = () => {
              >
                 <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/20 to-transparent z-10" />
                 <img 
-                  src={homeVideo ? `https://img.youtube.com/vi/${homeVideo.url.match(/(?:v=|\/)([0-9A-Za-z_-]{11}).*/)?.[1]}/maxresdefault.jpg` : "https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop"} 
+                  src={homeVideo?.thumbnail || "https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop"} 
                   alt="Teaser" 
                   className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                   onError={(e) => {

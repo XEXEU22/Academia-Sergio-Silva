@@ -12,7 +12,8 @@ import {
   Plus,
   Video,
   Star,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Upload
 } from '../icons';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,6 +34,8 @@ const PremiumVideoUpload: React.FC = () => {
     is_home_featured: false,
     duration: '10:00'
   });
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [currentHomeVideo, setCurrentHomeVideo] = useState<{title: string} | null>(null);
 
   React.useEffect(() => {
@@ -59,26 +62,47 @@ const PremiumVideoUpload: React.FC = () => {
     setError(null);
     setSuccess(false);
 
-    if (!user) {
-      setError('Você precisa estar logado para cadastrar vídeos.');
-      setLoading(false);
-      return;
+    let finalVideoUrl = formData.video_url;
+
+    // Handle Direct File Upload
+    if (videoFile) {
+      try {
+        const fileExt = videoFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `videos/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(filePath, videoFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('media')
+          .getPublicUrl(filePath);
+        
+        finalVideoUrl = publicUrl;
+      } catch (err: any) {
+        setError('Erro ao subir arquivo: ' + err.message + '. Certifique-se de que o bucket "media" existe no Supabase.');
+        setLoading(false);
+        return;
+      }
+    } else {
+      const videoId = extractYoutubeId(formData.video_url);
+      if (!videoId) {
+        setError('URL do YouTube inválida ou nenhum arquivo selecionado.');
+        setLoading(false);
+        return;
+      }
     }
 
-    const videoId = extractYoutubeId(formData.video_url);
-    if (!videoId) {
-      setError('URL do YouTube inválida. Use o link completo do vídeo.');
-      setLoading(false);
-      return;
-    }
-
-    // Use custom thumbnail if provided, otherwise use YouTube default
-    const thumbnail_url = formData.thumbnail_url || getThumbnailUrl(videoId);
+    const videoId = extractYoutubeId(finalVideoUrl);
+    const thumbnail_url = formData.thumbnail_url || (videoId ? getThumbnailUrl(videoId) : 'https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop');
 
     try {
       const { error: supabaseError } = await supabase.from('videos').insert({
         title: formData.title,
-        video_url: formData.video_url,
+        video_url: finalVideoUrl,
         thumbnail_url,
         category: formData.category,
         is_premium: formData.is_premium,
@@ -93,8 +117,16 @@ const PremiumVideoUpload: React.FC = () => {
       if (formData.is_home_featured) {
         await supabase.from('site_assets').upsert({
           asset_key: 'home_video',
-          url: formData.video_url,
+          url: finalVideoUrl,
           description: formData.title,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'asset_key' });
+
+        // Store thumbnail as a separate asset key for easy access
+        await supabase.from('site_assets').upsert({
+          asset_key: 'home_video_thumbnail',
+          url: thumbnail_url,
+          description: 'Capa do vídeo da home',
           updated_at: new Date().toISOString()
         }, { onConflict: 'asset_key' });
       }
@@ -162,20 +194,58 @@ const PremiumVideoUpload: React.FC = () => {
               />
             </div>
 
-            {/* YouTube URL */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Link do YouTube</label>
-              <div className="relative">
-                <input 
-                  required
-                  type="url"
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  value={formData.video_url}
-                  onChange={(e) => setFormData({...formData, video_url: e.target.value})}
-                  className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 pl-12 text-sm font-medium focus:border-primary/50 focus:ring-4 focus:ring-primary/5 outline-none transition-all"
-                />
-                <Youtube size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+            {/* Video Source Selection */}
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Origem do Vídeo</label>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setVideoFile(null)}
+                  className={`p-4 rounded-2xl border text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                    !videoFile ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-white/5 border-white/10 text-slate-500'
+                  }`}
+                >
+                  <Youtube size={16} /> YouTube
+                </button>
+                <div className="relative">
+                  <input 
+                    type="file" 
+                    accept="video/*" 
+                    onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                  <button
+                    type="button"
+                    className={`w-full p-4 rounded-2xl border text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                      videoFile ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-white/5 border-white/10 text-slate-500'
+                    }`}
+                  >
+                    <Upload size={16} /> Galeria
+                  </button>
+                </div>
               </div>
+
+              {videoFile ? (
+                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Video size={18} className="text-primary" />
+                    <span className="text-xs font-bold text-white truncate max-w-[150px]">{videoFile.name}</span>
+                  </div>
+                  <button onClick={() => setVideoFile(null)} className="text-[10px] font-black text-rose-500 uppercase">Remover</button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <input 
+                    type="url"
+                    placeholder="Cole o link do YouTube aqui..."
+                    value={formData.video_url}
+                    onChange={(e) => setFormData({...formData, video_url: e.target.value})}
+                    className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 pl-12 text-sm font-medium focus:border-primary/50 outline-none transition-all"
+                  />
+                  <Youtube size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                </div>
+              )}
             </div>
 
             {/* Custom Thumbnail URL */}

@@ -23,7 +23,8 @@ import {
   Image as ImageIcon,
   Image,
   Play,
-  Save
+  Save,
+  Video
 } from '../icons';
 
 /* ────────────────────────────────────────────────────────────────────────── */
@@ -44,7 +45,7 @@ interface OwnerData {
 const PremiumAdminOwner: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'students' | 'reservations' | 'notifications' | 'photo' | 'schedule' | 'videos' | 'gallery' | 'plans'>('students');
+  const [activeTab, setActiveTab] = useState<'students' | 'reservations' | 'notifications' | 'photo' | 'schedule' | 'videos' | 'gallery' | 'plans' | 'home_video'>('students');
   const [data, setData] = useState<OwnerData>({
     students: [],
     enrollments: [],
@@ -234,13 +235,14 @@ const PremiumAdminOwner: React.FC = () => {
         </section>
 
         {/* Navigation Tabs - Modern & Focused */}
-        <div className="flex p-1.5 bg-white/5 rounded-[2rem] border border-white/10 overflow-x-auto">
+        <div className="grid grid-cols-4 sm:flex p-1.5 bg-white/5 rounded-[2rem] border border-white/10 gap-1.5 sm:overflow-x-auto">
           {[
             { id: 'students', label: 'Alunos', icon: Users },
             { id: 'schedule', label: 'Agenda', icon: Calendar },
             { id: 'reservations', label: 'Reservas', icon: CalendarDays },
             { id: 'plans', label: 'Planos', icon: DollarSign },
             { id: 'videos', label: 'Vídeos', icon: Play },
+            { id: 'home_video', label: 'Home', icon: Video },
             { id: 'photo', label: 'Mestre', icon: ImageIcon },
             { id: 'gallery', label: 'Galeria', icon: Image },
             { id: 'notifications', label: 'Avisos', icon: Bell },
@@ -248,14 +250,15 @@ const PremiumAdminOwner: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex-1 flex items-center justify-center gap-2.5 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest transition-all shrink-0 ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2.5 py-3 sm:py-4 rounded-[1.5rem] sm:rounded-[1.8rem] text-[8px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${
                 activeTab === tab.id 
                 ? 'bg-primary text-white shadow-xl shadow-primary/20' 
                 : 'text-slate-500 hover:text-white'
               }`}
             >
               <tab.icon size={16} />
-              {tab.label}
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.label.substring(0, 5)}</span>
             </button>
           ))}
         </div>
@@ -506,6 +509,43 @@ const PremiumAdminOwner: React.FC = () => {
                 >
                   <ImageIcon size={24} /> Assets do Site
                 </button>
+              </div>
+            </motion.section>
+          )}
+
+          {activeTab === 'home_video' && (
+            <motion.section
+              key="home_video"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="space-y-6"
+            >
+              <div className="space-y-2 text-center sm:text-left">
+                <h3 className="text-base font-black text-white">Vídeo em Destaque (Página Inicial)</h3>
+                <p className="text-xs text-slate-500">O vídeo que aparece no topo do site para todos os visitantes.</p>
+              </div>
+
+              <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 flex flex-col items-center text-center space-y-4">
+                 <div className="size-16 rounded-3xl bg-primary/20 flex items-center justify-center text-primary">
+                    <Video size={32} />
+                 </div>
+                 <h4 className="text-lg font-black text-white">Gerenciar Vídeo Principal</h4>
+                 <p className="text-xs text-slate-400 max-w-[250px]">Você pode subir um vídeo direto da galeria (MP4) ou usar um link do YouTube.</p>
+                 
+                 <button 
+                   onClick={() => navigate('/upload-video')}
+                   className="w-full py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20 flex items-center justify-center gap-2"
+                 >
+                   <Play size={14} /> Configurar Vídeo da Home
+                 </button>
+              </div>
+
+              <div className="p-6 rounded-[2rem] bg-white/5 border border-white/10">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Dica de Performance</h4>
+                <p className="text-[11px] text-slate-400 leading-relaxed italic">
+                  "Vídeos curtos (até 15 segundos) e sem som funcionam melhor para a abertura do site, criando um impacto visual sem pesar no carregamento."
+                </p>
               </div>
             </motion.section>
           )}

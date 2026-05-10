@@ -80,7 +80,8 @@ import {
   DollarSign,
   UserCheck,
   Key,
-  Tag
+  Tag,
+  Upload
 } from 'lucide-react';
 
 // Export all icons for use throughout the app
@@ -166,5 +167,6 @@ export {
   DollarSign,
   UserCheck,
   Key,
-  Tag
+  Tag,
+  Upload
 };
