@@ -24,6 +24,7 @@ import PremiumAssetManagement from './screens/PremiumAssetManagement';
 import PremiumAdminStudents from './screens/PremiumAdminStudents';
 import PremiumAdminSchedule from './screens/PremiumAdminSchedule';
 import PremiumAdminOwner from './screens/PremiumAdminOwner';
+import PremiumAdminPlans from './screens/PremiumAdminPlans';
 import PremiumDirectAdmin from './screens/PremiumDirectAdmin';
 
 export default function App() {
@@ -84,6 +85,11 @@ export default function App() {
           <Route path="/admin/schedule" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <PremiumAdminSchedule />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/plans" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <PremiumAdminPlans />
             </ProtectedRoute>
           } />
           <Route path="/acesso-mestre" element={<PremiumDirectAdmin />} />

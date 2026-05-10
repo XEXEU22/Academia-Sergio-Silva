@@ -79,7 +79,8 @@ import {
   ShieldAlert,
   DollarSign,
   UserCheck,
-  Key
+  Key,
+  Tag
 } from 'lucide-react';
 
 // Export all icons for use throughout the app
@@ -164,5 +165,6 @@ export {
   ShieldAlert,
   DollarSign,
   UserCheck,
-  Key
+  Key,
+  Tag
 };

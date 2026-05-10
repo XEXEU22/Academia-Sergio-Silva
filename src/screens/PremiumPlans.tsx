@@ -14,49 +14,64 @@ import {
   Star
 } from '../icons';
 import BottomNav from '../components/BottomNav';
+import { supabase } from '../supabase';
+
+interface PlanData {
+  id: string;
+  name: string;
+  description: string;
+  monthly_price: number;
+  annual_price: number;
+  features: string[];
+  is_active: boolean;
+}
 
 const PremiumPlans: React.FC = () => {
   const navigate = useNavigate();
   const [isAnnual, setIsAnnual] = useState(true);
+  const [dbPlans, setDbPlans] = useState<PlanData[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const plans = [
-    {
-      title: 'Essencial',
-      price: isAnnual ? '120' : '150',
-      description: 'Perfeito para quem está começando na jornada.',
-      highlight: false,
-      icon: Target,
-      features: ['Acesso a todas as modalidades', 'Aulas ilimitadas', 'Avaliação física básica']
-    },
-    {
-      title: 'Guerreiro Elite',
-      price: isAnnual ? '180' : '220',
-      description: 'O caminho completo para a maestria.',
-      highlight: true,
-      badge: 'MAIS POPULAR',
-      icon: Shield,
-      features: [
-        'Tudo do Plano Essencial', 
-        'Kimono oficial de brinde', 
-        'Desconto em seminários', 
-        'Acesso total ao App Premium',
-        'Sessão privada mensal'
-      ]
-    },
-    {
-      title: 'Mestrado',
-      price: isAnnual ? '280' : '350',
-      description: 'Para quem busca o topo da montanha.',
-      highlight: false,
-      icon: Trophy,
-      features: [
-        'Acesso Vitalício Garantido', 
-        'Mentoria direta com Mestres', 
-        'Kit combate completo',
-        'Viagens para competições'
-      ]
-    }
-  ];
+  React.useEffect(() => {
+    const fetchPlans = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from('plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('monthly_price', { ascending: true });
+      
+      if (data) {
+        setDbPlans(data);
+      }
+      setLoading(false);
+    };
+    fetchPlans();
+  }, []);
+
+  // Map dbPlans to the visual structure, adding icons and highlights based on price/order
+  const getPlanVisuals = (plan: PlanData, index: number) => {
+    // Determine visuals based on index (0: Essencial, 1: Elite/Popular, 2+: Master)
+    const visuals = [
+      { icon: Target, highlight: false, badge: null },
+      { icon: Shield, highlight: true, badge: 'MAIS POPULAR' },
+      { icon: Trophy, highlight: false, badge: null }
+    ];
+    return visuals[Math.min(index, 2)];
+  };
+
+  const plans = dbPlans.map((p, i) => {
+    const visuals = getPlanVisuals(p, i);
+    return {
+      title: p.name,
+      price: isAnnual ? p.annual_price : p.monthly_price,
+      description: p.description,
+      highlight: visuals.highlight,
+      badge: visuals.badge,
+      icon: visuals.icon,
+      features: p.features || []
+    };
+  });
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -131,58 +146,68 @@ const PremiumPlans: React.FC = () => {
 
         {/* Plan Cards Slider/Stack */}
         <div className="space-y-12 mb-16">
-          {plans.map((plan, i) => (
-            <motion.div 
-              key={i}
-              variants={itemVariants}
-              whileHover={{ y: -10 }}
-              className={`relative flex flex-col gap-8 rounded-[3rem] border p-8 transition-all overflow-hidden ${
-                plan.highlight 
-                  ? 'border-primary/40 bg-card-dark shadow-[0_25px_60px_-15px_rgba(255,107,0,0.3)] ring-4 ring-primary/10' 
-                  : 'border-border-dark bg-card-dark/50'
-              }`}
-            >
-              {plan.highlight && (
-                <div className="absolute top-0 right-0 px-6 py-2 bg-primary rounded-bl-[2rem] text-[9px] uppercase tracking-[0.3em] font-black text-white shadow-xl">
-                  {plan.badge}
-                </div>
-              )}
-              
-              <div className="flex flex-col gap-2">
-                <div className={`size-14 rounded-3xl ${plan.highlight ? 'bg-primary text-white shadow-xl shadow-primary/20' : 'bg-white/5 text-slate-400'} flex items-center justify-center mb-4`}>
-                   <plan.icon size={28} />
-                </div>
-                <h3 className="text-2xl font-black tracking-tight">{plan.title}</h3>
-                <p className="text-slate-500 text-xs leading-relaxed">{plan.description}</p>
-                <div className="flex items-baseline gap-2 mt-4">
-                  <span className={`text-5xl font-black ${plan.highlight ? 'text-primary' : 'text-white'}`}>R$ {plan.price}</span>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">/ por mês</span>
-                </div>
-              </div>
-
-              <div className="space-y-5">
-                {plan.features.map((feature, j) => (
-                  <div key={j} className="flex items-center gap-3 text-sm">
-                    <CheckCircle2 className={plan.highlight ? 'text-primary' : 'text-slate-600'} size={20} />
-                    <span className={`text-[11px] font-bold uppercase tracking-tight ${plan.highlight ? 'text-white' : 'text-white/60'}`}>{feature}</span>
-                  </div>
-                ))}
-              </div>
-
-              <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate('/dashboard')}
-                className={`w-full py-5 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.3em] transition-all shadow-2xl ${
+          {loading ? (
+            <div className="py-20 flex justify-center">
+              <div className="size-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : plans.length === 0 ? (
+            <div className="py-20 text-center border border-dashed border-border-dark rounded-[2rem]">
+              <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Nenhum plano disponível no momento.</p>
+            </div>
+          ) : (
+            plans.map((plan, i) => (
+              <motion.div 
+                key={i}
+                variants={itemVariants}
+                whileHover={{ y: -10 }}
+                className={`relative flex flex-col gap-8 rounded-[3rem] border p-8 transition-all overflow-hidden ${
                   plan.highlight 
-                    ? 'bg-primary text-white shadow-primary/30 border border-primary/20' 
-                    : 'bg-white text-background-dark shadow-white/5'
+                    ? 'border-primary/40 bg-card-dark shadow-[0_25px_60px_-15px_rgba(255,107,0,0.3)] ring-4 ring-primary/10' 
+                    : 'border-border-dark bg-card-dark/50'
                 }`}
               >
-                Começar Treino
-              </motion.button>
-            </motion.div>
-          ))}
+                {plan.highlight && plan.badge && (
+                  <div className="absolute top-0 right-0 px-6 py-2 bg-primary rounded-bl-[2rem] text-[9px] uppercase tracking-[0.3em] font-black text-white shadow-xl">
+                    {plan.badge}
+                  </div>
+                )}
+                
+                <div className="flex flex-col gap-2">
+                  <div className={`size-14 rounded-3xl ${plan.highlight ? 'bg-primary text-white shadow-xl shadow-primary/20' : 'bg-white/5 text-slate-400'} flex items-center justify-center mb-4`}>
+                     <plan.icon size={28} />
+                  </div>
+                  <h3 className="text-2xl font-black tracking-tight">{plan.title}</h3>
+                  <p className="text-slate-500 text-xs leading-relaxed">{plan.description}</p>
+                  <div className="flex items-baseline gap-2 mt-4">
+                    <span className={`text-5xl font-black ${plan.highlight ? 'text-primary' : 'text-white'}`}>R$ {plan.price}</span>
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">/ por mês</span>
+                  </div>
+                </div>
+
+                <div className="space-y-5">
+                  {plan.features.map((feature, j) => (
+                    <div key={j} className="flex items-center gap-3 text-sm">
+                      <CheckCircle2 className={plan.highlight ? 'text-primary' : 'text-slate-600'} size={20} />
+                      <span className={`text-[11px] font-bold uppercase tracking-tight ${plan.highlight ? 'text-white' : 'text-white/60'}`}>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate('/dashboard')}
+                  className={`w-full py-5 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.3em] transition-all shadow-2xl ${
+                    plan.highlight 
+                      ? 'bg-primary text-white shadow-primary/30 border border-primary/20' 
+                      : 'bg-white text-background-dark shadow-white/5'
+                  }`}
+                >
+                  Começar Treino
+                </motion.button>
+              </motion.div>
+            ))
+          )}
         </div>
 
         {/* Bottom Support Section */}

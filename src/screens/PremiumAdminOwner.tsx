@@ -44,7 +44,7 @@ interface OwnerData {
 const PremiumAdminOwner: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'students' | 'reservations' | 'notifications' | 'photo' | 'schedule' | 'videos' | 'gallery'>('students');
+  const [activeTab, setActiveTab] = useState<'students' | 'reservations' | 'notifications' | 'photo' | 'schedule' | 'videos' | 'gallery' | 'plans'>('students');
   const [data, setData] = useState<OwnerData>({
     students: [],
     enrollments: [],
@@ -239,6 +239,7 @@ const PremiumAdminOwner: React.FC = () => {
             { id: 'students', label: 'Alunos', icon: Users },
             { id: 'schedule', label: 'Agenda', icon: Calendar },
             { id: 'reservations', label: 'Reservas', icon: CalendarDays },
+            { id: 'plans', label: 'Planos', icon: DollarSign },
             { id: 'videos', label: 'Vídeos', icon: Play },
             { id: 'photo', label: 'Mestre', icon: ImageIcon },
             { id: 'gallery', label: 'Galeria', icon: Image },
@@ -435,6 +436,27 @@ const PremiumAdminOwner: React.FC = () => {
                   Nenhum aviso ou notificação.
                 </div>
               )}
+            </motion.section>
+          )}
+
+          {activeTab === 'plans' && (
+            <motion.section
+              key="plans"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="space-y-6"
+            >
+              <div className="space-y-2">
+                <h3 className="text-base font-black text-white">Gerenciador de Planos</h3>
+                <p className="text-xs text-slate-500">Crie, altere os preços ou atualize as vantagens das mensalidades.</p>
+              </div>
+              <button
+                onClick={() => navigate('/admin/plans')}
+                className="w-full py-5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 bg-primary text-white shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all"
+              >
+                <DollarSign size={16} /> Configurar Mensalidades
+              </button>
             </motion.section>
           )}
 
