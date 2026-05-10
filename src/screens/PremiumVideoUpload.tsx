@@ -11,7 +11,8 @@ import {
   Trash2,
   Plus,
   Video,
-  Star
+  Star,
+  Image as ImageIcon
 } from '../icons';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,11 +27,21 @@ const PremiumVideoUpload: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     video_url: '',
+    thumbnail_url: '', // New field for custom thumbnail
     category: 'Jiu-Jitsu',
     is_premium: false,
     is_home_featured: false,
     duration: '10:00'
   });
+  const [currentHomeVideo, setCurrentHomeVideo] = useState<{title: string} | null>(null);
+
+  React.useEffect(() => {
+    const fetchHomeVideo = async () => {
+      const { data } = await supabase.from('site_assets').select('description').eq('asset_key', 'home_video').single();
+      if (data) setCurrentHomeVideo({ title: data.description });
+    };
+    fetchHomeVideo();
+  }, []);
 
   const categories = ['Jiu-Jitsu', 'Muay Thai', 'Wing Chun', 'Kickboxing', 'Defesa'];
 
@@ -61,7 +72,8 @@ const PremiumVideoUpload: React.FC = () => {
       return;
     }
 
-    const thumbnail_url = getThumbnailUrl(videoId);
+    // Use custom thumbnail if provided, otherwise use YouTube default
+    const thumbnail_url = formData.thumbnail_url || getThumbnailUrl(videoId);
 
     try {
       const { error: supabaseError } = await supabase.from('videos').insert({
@@ -91,6 +103,7 @@ const PremiumVideoUpload: React.FC = () => {
       setFormData({
         title: '',
         video_url: '',
+        thumbnail_url: '',
         category: 'Jiu-Jitsu',
         is_premium: false,
         is_home_featured: false,
@@ -165,6 +178,22 @@ const PremiumVideoUpload: React.FC = () => {
               </div>
             </div>
 
+            {/* Custom Thumbnail URL */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Capa Personalizada (Opcional - URL)</label>
+              <div className="relative">
+                <input 
+                  type="url"
+                  placeholder="https://exemplo.com/capa.jpg"
+                  value={formData.thumbnail_url}
+                  onChange={(e) => setFormData({...formData, thumbnail_url: e.target.value})}
+                  className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 pl-12 text-sm font-medium focus:border-primary/50 focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                />
+                <ImageIcon size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+              </div>
+              <p className="text-[9px] text-slate-600 font-bold ml-2">Se deixar vazio, usaremos a capa automática do YouTube.</p>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               {/* Category */}
               <div className="space-y-2">
@@ -206,8 +235,10 @@ const PremiumVideoUpload: React.FC = () => {
                   <Star size={20} />
                 </div>
                 <div>
-                  <p className="text-xs font-black uppercase tracking-widest">Destaque na Home</p>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">Este vídeo será o principal na tela inicial</p>
+                  <p className="text-xs font-black uppercase tracking-widest">Substituir Vídeo da Home</p>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+                    {currentHomeVideo ? `Substituirá: "${currentHomeVideo.title}"` : 'Definir como vídeo principal da Home'}
+                  </p>
                 </div>
               </div>
               <div className={`size-6 rounded-full border-2 flex items-center justify-center transition-all ${
