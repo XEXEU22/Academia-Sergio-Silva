@@ -106,13 +106,29 @@ const PremiumHome: React.FC = () => {
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(user ? '/dashboard' : '/instructor')}
-            className="size-10 rounded-xl border border-white/10 p-0.5 overflow-hidden bg-background-dark group relative"
+            onClick={() => navigate(user ? '/dashboard' : '/login')}
+            className={`flex items-center gap-2 rounded-xl border border-white/10 pr-3 pl-1.5 py-1.5 transition-colors ${
+              user ? 'bg-primary/10 hover:bg-primary/20 border-primary/20' : 'bg-white/5 hover:bg-white/10'
+            }`}
           >
-             <img src={`https://ui-avatars.com/api/?name=${user ? (profile?.full_name?.substring(0,2) || 'A') : 'S+S'}&background=FF6B00&color=fff`} className="w-full h-full object-cover rounded-[0.5rem] opacity-80 group-hover:opacity-100 transition-opacity" alt="Avatar" />
-             {user && (
-               <div className="absolute -bottom-1 -right-1 size-3.5 bg-green-500 rounded-full border-2 border-background-dark shadow-sm shadow-green-500/50" />
-             )}
+            {user ? (
+              <>
+                <div className="relative size-7 rounded-lg overflow-hidden bg-primary/20 flex items-center justify-center border border-primary/30 shrink-0">
+                  <span className="text-[10px] font-black text-primary uppercase">
+                    {profile?.full_name?.substring(0,2) || 'ON'}
+                  </span>
+                  <div className="absolute -bottom-0.5 -right-0.5 size-2.5 bg-green-500 rounded-full border border-background-dark shadow-sm shadow-green-500/50 animate-pulse" />
+                </div>
+                <span className="text-[9px] font-black uppercase text-primary tracking-widest whitespace-nowrap">Painel</span>
+              </>
+            ) : (
+              <>
+                <div className="size-7 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-400 shrink-0">
+                  <User size={14} />
+                </div>
+                <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">Entrar</span>
+              </>
+            )}
           </motion.button>
         </div>
       </header>
