@@ -12,7 +12,6 @@ const BottomNav: React.FC = () => {
   const navItems = [
     { path: '/', label: 'Home', icon: Home },
     { path: '/schedule', label: 'Agenda', icon: Calendar },
-    { path: '/videos', label: 'Treinos', icon: Zap },
     { path: '/gallery', label: 'Galeria', icon: ImageIcon },
     { path: '/dashboard', label: 'Aluno', icon: GraduationCap },
     { path: '/instructor', label: 'Mestre', icon: User },

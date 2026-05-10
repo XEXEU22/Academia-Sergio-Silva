@@ -227,7 +227,7 @@ const PremiumHome: React.FC = () => {
                  if (homeVideo?.url) {
                    window.open(homeVideo.url, '_blank');
                  } else {
-                   navigate('/videos');
+                   navigate('/gallery');
                  }
                }}
                className="relative rounded-[2.5rem] overflow-hidden bg-card-dark border border-border-dark shadow-2xl shadow-primary/5 aspect-video cursor-pointer"

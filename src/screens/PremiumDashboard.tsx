@@ -15,7 +15,8 @@ import {
   Zap,
   Target,
   Video,
-  ShieldCheck
+  ShieldCheck,
+  Image as ImageIcon
 } from '../icons';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
@@ -182,7 +183,7 @@ const PremiumDashboard: React.FC = () => {
           {[
             { icon: Calendar, label: 'Agendar', color: 'bg-primary/10 text-primary', desc: 'Próxima Aula', path: '/schedule' },
             { icon: TrendingUp, label: 'Evolução', color: 'bg-emerald-500/10 text-emerald-400', desc: 'Estatísticas' },
-            { icon: PlayCircle, label: 'Técnicas', color: 'bg-primary/10 text-primary', desc: 'Vídeos', path: '/videos' },
+            { icon: ImageIcon, label: 'Galeria', color: 'bg-primary/10 text-primary', desc: 'Momentos', path: '/gallery' },
             { icon: isAdmin ? ShieldCheck : Trophy, label: isAdmin ? 'Admin' : 'Conquistas', color: isAdmin ? 'bg-indigo-500/10 text-indigo-400' : 'bg-amber-500/10 text-amber-400', desc: isAdmin ? 'Acesso Master' : '8 Medalhas', path: isAdmin ? '/admin' : undefined },
           ].map((action, idx) => (
             <motion.button
