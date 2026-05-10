@@ -179,6 +179,7 @@ export default function PremiumAdminStudents() {
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
+    try {
       // 1. Profiles (Primary)
       const { data: profiles, error: pError } = await supabase
         .from('profiles')

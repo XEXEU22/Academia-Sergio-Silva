@@ -79,7 +79,7 @@ import {
   ShieldAlert,
   DollarSign,
   UserCheck,
-  Save
+  Key
 } from 'lucide-react';
 
 // Export all icons for use throughout the app
@@ -164,5 +164,5 @@ export {
   ShieldAlert,
   DollarSign,
   UserCheck,
-  Save
+  Key
 };

@@ -132,6 +132,9 @@ const PremiumAdminOwner: React.FC = () => {
         return;
       }
 
+      const todayString = new Date().toDateString();
+      const todayRes = (enrollments || []).filter(e => e.class && new Date((e.class as any).start_time).toDateString() === todayString).length;
+
       setData({
         students: profiles,
         enrollments: enrollments || [],
