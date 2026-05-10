@@ -14,7 +14,8 @@ import {
   Star,
   Activity,
   Award,
-  Crown
+  Crown,
+  LogOut
 } from '../icons';
 import BottomNav from '../components/BottomNav';
 import { supabase } from '../supabase';
@@ -24,6 +25,7 @@ const PremiumHome: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const [homeBanner, setHomeBanner] = React.useState('https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=1200&auto=format&fit=crop');
+  const [showUserMenu, setShowUserMenu] = React.useState(false);
 
   React.useEffect(() => {
     const fetchBanner = async () => {
@@ -103,33 +105,54 @@ const PremiumHome: React.FC = () => {
             <span className="absolute top-2 right-2 size-1.5 bg-primary rounded-full ring-2 ring-slate-950" />
           </motion.button>
           
-          <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(user ? '/dashboard' : '/login')}
-            className={`flex items-center gap-2 rounded-xl border border-white/10 pr-3 pl-1.5 py-1.5 transition-colors ${
-              user ? 'bg-primary/10 hover:bg-primary/20 border-primary/20' : 'bg-white/5 hover:bg-white/10'
-            }`}
-          >
-            {user ? (
-              <>
-                <div className="relative size-7 rounded-lg overflow-hidden bg-primary/20 flex items-center justify-center border border-primary/30 shrink-0">
-                  <span className="text-[10px] font-black text-primary uppercase">
-                    {profile?.full_name?.substring(0,2) || 'ON'}
-                  </span>
-                  <div className="absolute -bottom-0.5 -right-0.5 size-2.5 bg-green-500 rounded-full border border-background-dark shadow-sm shadow-green-500/50 animate-pulse" />
-                </div>
-                <span className="text-[9px] font-black uppercase text-primary tracking-widest whitespace-nowrap">Painel</span>
-              </>
-            ) : (
-              <>
-                <div className="size-7 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-400 shrink-0">
-                  <User size={14} />
-                </div>
-                <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">Entrar</span>
-              </>
+          <div className="relative">
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => user ? setShowUserMenu(!showUserMenu) : navigate('/login')}
+              className={`flex items-center gap-2 rounded-xl border border-white/10 pr-3 pl-1.5 py-1.5 transition-colors ${
+                user ? 'bg-primary/10 hover:bg-primary/20 border-primary/20' : 'bg-white/5 hover:bg-white/10'
+              }`}
+            >
+              {user ? (
+                <>
+                  <div className="relative size-7 rounded-lg overflow-hidden bg-primary/20 flex items-center justify-center border border-primary/30 shrink-0">
+                    <span className="text-[10px] font-black text-primary uppercase">
+                      {profile?.full_name?.substring(0,2) || 'ON'}
+                    </span>
+                    <div className="absolute -bottom-0.5 -right-0.5 size-2.5 bg-green-500 rounded-full border border-background-dark shadow-sm shadow-green-500/50 animate-pulse" />
+                  </div>
+                  <span className="text-[9px] font-black uppercase text-primary tracking-widest whitespace-nowrap">Opções</span>
+                </>
+              ) : (
+                <>
+                  <div className="size-7 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-400 shrink-0">
+                    <User size={14} />
+                  </div>
+                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">Entrar</span>
+                </>
+              )}
+            </motion.button>
+
+            {/* Dropdown Menu for Logged In User */}
+            {user && showUserMenu && (
+              <div className="absolute top-full mt-2 right-0 w-48 bg-card-dark border border-border-dark rounded-2xl shadow-2xl overflow-hidden py-2 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
+                <button 
+                  onClick={() => navigate('/dashboard')} 
+                  className="w-full px-4 py-3 text-left text-xs font-bold text-white hover:bg-white/5 flex items-center gap-3 transition-colors uppercase tracking-widest"
+                >
+                  <User size={16} className="text-primary" /> Meu Painel
+                </button>
+                <div className="h-px w-full bg-border-dark my-1" />
+                <button 
+                  onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }} 
+                  className="w-full px-4 py-3 text-left text-xs font-bold text-rose-500 hover:bg-rose-500/10 flex items-center gap-3 transition-colors uppercase tracking-widest"
+                >
+                  <LogOut size={16} /> Sair da Conta
+                </button>
+              </div>
             )}
-          </motion.button>
+          </div>
         </div>
       </header>
 
