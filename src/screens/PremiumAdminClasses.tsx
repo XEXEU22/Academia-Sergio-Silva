@@ -130,10 +130,12 @@ export default function PremiumAdminClasses() {
       } else {
         await supabase.from('classes').update(payload).eq('id', editingClass.id);
       }
-      fetchData();
+      await fetchData();
       setEditingClass(null);
-    } catch (err) {
+      alert('Aula salva com sucesso! ✅');
+    } catch (err: any) {
       console.error('Erro ao salvar aula:', err);
+      alert('Erro ao salvar: ' + (err.message || 'Verifique os campos e tente novamente.'));
     } finally {
       setSaving(false);
     }
@@ -397,7 +399,20 @@ export default function PremiumAdminClasses() {
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 mb-1 block">Duração (min)</span>
                     <input type="number" required value={editingClass.duration_minutes} onChange={e => setEditingClass({...editingClass, duration_minutes: e.target.value})} className="w-full bg-card-dark border border-border-dark py-4 px-5 rounded-[1.5rem] text-sm text-white focus:outline-none focus:border-primary" />
                   </label>
+
+                  <label className="block">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 mb-1 block">Vagas (Opcional)</span>
+                    <input type="number" value={editingClass.max_spots || 20} onChange={e => setEditingClass({...editingClass, max_spots: e.target.value})} className="w-full bg-card-dark border border-border-dark py-4 px-5 rounded-[1.5rem] text-sm text-white focus:outline-none focus:border-primary" />
+                  </label>
                </div>
+
+               <label className="block">
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 mb-1 block">Status</span>
+                  <select value={editingClass.status || 'available'} onChange={e => setEditingClass({...editingClass, status: e.target.value})} className="w-full bg-card-dark border border-border-dark py-4 px-5 rounded-[1.5rem] text-sm text-white focus:outline-none focus:border-primary appearance-none">
+                     <option value="available">Ativa</option>
+                     <option value="cancelled">Cancelada / Feriado</option>
+                  </select>
+               </label>
 
                <button type="submit" disabled={saving} className={`w-full py-5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 transition-colors ${saving ? 'bg-primary/50 cursor-not-allowed' : 'bg-primary text-white shadow-xl shadow-primary/20'}`}>
                  {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><Save size={18} /> Salvar Aula</>}
