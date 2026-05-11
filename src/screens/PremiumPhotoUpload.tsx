@@ -8,7 +8,11 @@ import {
   AlertCircle, 
   CheckCircle2,
   Trash2,
-  Filter
+  Filter,
+  RefreshCw,
+  Upload,
+  Link as LinkIcon,
+  X
 } from '../icons';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -32,6 +36,10 @@ const PremiumPhotoUpload: React.FC = () => {
     image_url: '',
     category: 'Recentes',
   });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
+
   const [existingPhotos, setExistingPhotos] = useState<Photo[]>([]);
   const [managementFilter, setManagementFilter] = useState('Todas');
 
@@ -46,6 +54,18 @@ const PremiumPhotoUpload: React.FC = () => {
     fetchPhotos();
   }, []);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setPhotoFile(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPhotoPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setPhotoPreview(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -58,16 +78,36 @@ const PremiumPhotoUpload: React.FC = () => {
       return;
     }
 
-    if (!formData.image_url) {
-      setError('A URL da imagem é obrigatória.');
-      setLoading(false);
-      return;
-    }
+    let finalImageUrl = formData.image_url;
 
     try {
+      // 1. Handle File Upload if in file mode
+      if (uploadMode === 'file' && photoFile) {
+        const fileExt = photoFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `photos/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(filePath, photoFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('media')
+          .getPublicUrl(filePath);
+        
+        finalImageUrl = publicUrl;
+      }
+
+      if (!finalImageUrl) {
+        throw new Error('Nenhuma imagem selecionada ou URL vazia.');
+      }
+
+      // 2. Insert into database
       const { error: supabaseError } = await supabase.from('photos').insert({
         title: formData.title || 'Foto sem título',
-        image_url: formData.image_url,
+        image_url: finalImageUrl,
         category: formData.category,
       });
 
@@ -79,6 +119,8 @@ const PremiumPhotoUpload: React.FC = () => {
         image_url: '',
         category: 'Recentes',
       });
+      setPhotoFile(null);
+      setPhotoPreview(null);
       
       fetchPhotos();
       setTimeout(() => setSuccess(false), 3000);
@@ -124,6 +166,29 @@ const PremiumPhotoUpload: React.FC = () => {
         {/* Upload Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-6 bg-card-dark/50 border border-border-dark p-8 rounded-[2.5rem] backdrop-blur-sm">
+            
+            {/* Upload Mode Selector */}
+            <div className="grid grid-cols-2 gap-4 p-1.5 bg-background-dark/50 rounded-2xl border border-border-dark">
+              <button
+                type="button"
+                onClick={() => setUploadMode('file')}
+                className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                  uploadMode === 'file' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-white'
+                }`}
+              >
+                <Upload size={14} /> Galeria Celular
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadMode('url')}
+                className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                  uploadMode === 'url' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-white'
+                }`}
+              >
+                <LinkIcon size={14} /> Link / URL
+              </button>
+            </div>
+
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Título da Foto</label>
               <input 
@@ -135,17 +200,46 @@ const PremiumPhotoUpload: React.FC = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Link da Imagem (URL)</label>
-              <input 
-                required
-                type="url"
-                placeholder="https://images.unsplash.com/..."
-                value={formData.image_url}
-                onChange={(e) => setFormData({...formData, image_url: e.target.value})}
-                className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 text-sm font-medium focus:border-primary/50 outline-none transition-all"
-              />
-            </div>
+            {uploadMode === 'file' ? (
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2 block">Escolher Imagem</label>
+                <div className="relative aspect-video rounded-3xl border-2 border-dashed border-border-dark bg-background-dark/30 hover:border-primary/50 transition-all flex flex-col items-center justify-center overflow-hidden group">
+                  {photoPreview ? (
+                    <>
+                      <img src={photoPreview} className="w-full h-full object-cover" alt="Preview" />
+                      <button 
+                        type="button"
+                        onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
+                        className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md rounded-full text-white border border-white/10"
+                      >
+                        <X size={16} />
+                      </button>
+                    </>
+                  ) : (
+                    <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-6">
+                      <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                      <div className="p-4 rounded-2xl bg-primary/10 text-primary mb-3">
+                         <Upload size={24} />
+                      </div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Clique para selecionar</p>
+                      <p className="text-[8px] font-bold text-slate-600 mt-1">PNG, JPG ou WEBP</p>
+                    </label>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Link da Imagem (URL)</label>
+                <input 
+                  required
+                  type="url"
+                  placeholder="https://images.unsplash.com/..."
+                  value={formData.image_url}
+                  onChange={(e) => setFormData({...formData, image_url: e.target.value})}
+                  className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 text-sm font-medium focus:border-primary/50 outline-none transition-all"
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Modalidade / Filtro</label>
