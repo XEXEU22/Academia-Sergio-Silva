@@ -24,7 +24,9 @@ import {
   Image,
   Play,
   Save,
-  Video
+  Video,
+  Camera,
+  Upload
 } from '../icons';
 
 /* ────────────────────────────────────────────────────────────────────────── */
@@ -65,6 +67,8 @@ const PremiumAdminOwner: React.FC = () => {
   const [masterPhotoInput, setMasterPhotoInput] = useState('');
   const [savingPhoto, setSavingPhoto] = useState(false);
   const [photoMsg, setPhotoMsg] = useState<{ok: boolean; text: string} | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -79,7 +83,7 @@ const PremiumAdminOwner: React.FC = () => {
   const handleSavePhoto = async () => {
     if (!masterPhotoInput.trim()) return;
     setSavingPhoto(true);
-    const { data: existing } = await supabase.from('site_assets').select('id').eq('asset_key', 'master_photo').single();
+    const { data: existing } = await supabase.from('site_assets').select('id').eq('asset_key', 'master_photo').maybeSingle();
     let error;
     if (existing) {
       ({ error } = await supabase.from('site_assets').update({ url: masterPhotoInput }).eq('asset_key', 'master_photo'));
@@ -94,6 +98,50 @@ const PremiumAdminOwner: React.FC = () => {
     }
     setSavingPhoto(false);
     setTimeout(() => setPhotoMsg(null), 3000);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `master_admin_${Date.now()}.${fileExt}`;
+      const filePath = `site-assets/${fileName}`;
+
+      // 1. Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+
+      // 3. Update state and input
+      setMasterPhotoInput(publicUrl);
+      
+      // Auto-save if it's a file upload
+      const { data: existing } = await supabase.from('site_assets').select('id').eq('asset_key', 'master_photo').maybeSingle();
+      if (existing) {
+        await supabase.from('site_assets').update({ url: publicUrl }).eq('asset_key', 'master_photo');
+      } else {
+        await supabase.from('site_assets').insert({ asset_key: 'master_photo', url: publicUrl, description: 'Foto do Mestre' });
+      }
+
+      setMasterPhoto(publicUrl);
+      setPhotoMsg({ ok: true, text: 'Foto enviada e salva com sucesso!' });
+    } catch (err: any) {
+      console.error('Erro ao subir foto:', err);
+      setPhotoMsg({ ok: false, text: 'Erro ao subir: ' + err.message });
+    } finally {
+      setUploading(false);
+      setTimeout(() => setPhotoMsg(null), 3000);
+    }
   };
 
   const fetchDashboardData = async () => {
@@ -573,17 +621,43 @@ const PremiumAdminOwner: React.FC = () => {
                 </div>
               )}
 
-              {/* Input URL */}
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">URL da Nova Foto</label>
-                <input
-                  type="text"
-                  value={masterPhotoInput}
-                  onChange={e => setMasterPhotoInput(e.target.value)}
-                  placeholder="https://exemplo.com/foto-mestre.jpg"
-                  className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] py-4 px-5 text-sm focus:outline-none focus:border-primary/50 transition-all"
-                />
-                <p className="text-[9px] text-slate-600">Cole o link de uma imagem pública (Google Drive, Imgur, etc.)</p>
+              {/* Input URL & File Upload */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1 space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">URL da Nova Foto</label>
+                    <input
+                      type="text"
+                      value={masterPhotoInput}
+                      onChange={e => setMasterPhotoInput(e.target.value)}
+                      placeholder="https://exemplo.com/foto-mestre.jpg"
+                      className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] py-4 px-5 text-sm focus:outline-none focus:border-primary/50 transition-all"
+                    />
+                  </div>
+                  
+                  <div className="sm:w-48 space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Ou subir arquivo</label>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={handleFileChange} 
+                    />
+                    <button
+                      type="button"
+                      disabled={uploading}
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`w-full py-4 rounded-[1.5rem] border text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                        uploading ? 'bg-white/5 border-white/5 text-slate-600' : 'bg-primary/20 border-primary/40 text-primary hover:bg-primary/30'
+                      }`}
+                    >
+                      {uploading ? <RefreshCw size={14} className="animate-spin" /> : <Camera size={14} />}
+                      {uploading ? 'Enviando...' : 'Galeria'}
+                    </button>
+                  </div>
+                </div>
+                <p className="text-[9px] text-slate-600 italic">Dica: Fotos quadradas (1:1) funcionam melhor para o perfil circular.</p>
               </div>
 
               {/* Feedback */}

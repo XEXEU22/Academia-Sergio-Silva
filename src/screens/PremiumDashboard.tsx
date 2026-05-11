@@ -16,7 +16,8 @@ import {
   Target,
   Video,
   ShieldCheck,
-  Image as ImageIcon
+  Image as ImageIcon,
+  LogOut
 } from '../icons';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
@@ -24,7 +25,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const PremiumDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { profile, loading } = useAuth();
+  const { profile, loading, signOut } = useAuth();
 
   if (loading) {
     return (
@@ -100,10 +101,23 @@ const PremiumDashboard: React.FC = () => {
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="p-2.5 rounded-xl bg-card-dark border border-border-dark transition-colors relative text-slate-400"
+            onClick={() => navigate('/notifications')}
+            className="p-2.5 rounded-xl bg-card-dark border border-border-dark transition-colors relative text-slate-400 hover:text-primary"
           >
             <Bell size={20} />
             <span className="absolute top-2 right-2 size-2 bg-primary rounded-full ring-2 ring-background-dark" />
+          </motion.button>
+          
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={async () => {
+              await signOut();
+              navigate('/welcome');
+            }}
+            className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 transition-colors hover:bg-rose-500/20"
+          >
+            <LogOut size={20} />
           </motion.button>
         </div>
       </header>

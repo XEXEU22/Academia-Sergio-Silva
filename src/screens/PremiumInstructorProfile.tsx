@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, Variants } from 'motion/react';
+import { motion, Variants, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, 
@@ -19,23 +19,87 @@ import {
   Target,
   Grid,
   Filter,
-  X
+  X,
+  Camera,
+  RefreshCw,
+  Edit3
 } from '../icons';
 import BottomNav from '../components/BottomNav';
+import { supabase } from '../supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 const PremiumInstructorProfile: React.FC = () => {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [masterPhoto, setMasterPhoto] = React.useState<string>(
     'https://ui-avatars.com/api/?name=S+S&background=FF6B00&color=fff'
   );
+  const [uploading, setUploading] = React.useState(false);
+  const [toast, setToast] = React.useState<{ msg: string; ok: boolean } | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'instructor';
+
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   React.useEffect(() => {
-    // Load master photo from site_assets if available
-    import('../supabase').then(({ supabase }) => {
-      supabase.from('site_assets').select('url').eq('asset_key', 'master_photo').single()
-        .then(({ data }) => { if (data?.url) setMasterPhoto(data.url); });
-    });
+    const fetchPhoto = async () => {
+      const { data } = await supabase.from('site_assets').select('url').eq('asset_key', 'master_photo').maybeSingle();
+      if (data?.url) setMasterPhoto(data.url);
+    };
+    fetchPhoto();
   }, []);
+
+  const handlePhotoClick = () => {
+    if (isAdmin) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `master_profile_${Date.now()}.${fileExt}`;
+      const filePath = `site-assets/${fileName}`;
+
+      // 1. Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+
+      // 3. Update site_assets table
+      const { error: dbError } = await supabase.from('site_assets').upsert({
+        asset_key: 'master_photo',
+        url: publicUrl,
+        description: 'Foto do Mestre Sérgio',
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'asset_key' });
+
+      if (dbError) throw dbError;
+
+      setMasterPhoto(publicUrl);
+      showToast('Foto do Mestre atualizada! 🥋');
+    } catch (err: any) {
+      console.error('Erro ao subir foto:', err);
+      showToast('Erro ao atualizar: ' + (err.message || 'Erro desconhecido'), false);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -56,6 +120,22 @@ const PremiumInstructorProfile: React.FC = () => {
 
   return (
     <div className="bg-background-dark min-h-screen flex flex-col text-slate-100 font-display">
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: -20, x: '-50%' }}
+            className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl backdrop-blur-md border ${
+              toast.ok ? 'bg-emerald-500/90 border-emerald-400 text-white' : 'bg-rose-500/90 border-rose-400 text-white'
+            }`}
+          >
+            {toast.msg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header com Glassmorphism Translúcido */}
       <header className="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-border-dark">
         <button onClick={() => navigate(-1)} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">
@@ -76,14 +156,40 @@ const PremiumInstructorProfile: React.FC = () => {
         {/* Profile Hero with Dramatic Lighting */}
         <section className="px-6 flex flex-col items-center mb-10 text-center">
           <div className="relative mb-6">
+             {/* Hidden input for photo upload */}
+             <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleFileChange} 
+             />
+             
              {/* Glowing Aura */}
              <div className="absolute inset-0 bg-primary/30 rounded-full blur-[40px] animate-pulse scale-125" />
-             <div className="relative size-40 rounded-full border-[6px] border-primary p-1.5 bg-card-dark shadow-2xl overflow-hidden ring-offset-4 ring-offset-background-dark ring-2 ring-primary/20">
+             <div 
+                onClick={handlePhotoClick}
+                className={`relative size-40 rounded-full border-[6px] border-primary p-1.5 bg-card-dark shadow-2xl overflow-hidden ring-offset-4 ring-offset-background-dark ring-2 ring-primary/20 transition-all ${isAdmin ? 'cursor-pointer hover:scale-105 active:scale-95 group' : ''}`}
+             >
                 <img 
                    alt="Mestre Sérgio" 
-                   className="w-full h-full object-cover rounded-full" 
+                   className="w-full h-full object-cover rounded-full transition-all group-hover:brightness-50" 
                    src={masterPhoto}
                 />
+                
+                {/* Admin Upload Overlay */}
+                {isAdmin && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    {uploading ? (
+                      <RefreshCw className="text-white animate-spin" size={32} />
+                    ) : (
+                      <>
+                        <Camera className="text-white mb-1" size={32} />
+                        <span className="text-[8px] font-black uppercase text-white tracking-widest">Alterar</span>
+                      </>
+                    )}
+                  </div>
+                )}
              </div>
              <div className="absolute bottom-2 right-2 bg-primary text-white size-10 rounded-full flex items-center justify-center border-4 border-background-dark shadow-2xl">
                 <Verified size={20} className="fill-current" />
