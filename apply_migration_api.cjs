@@ -1,7 +1,7 @@
 const https = require('https');
 const fs = require('fs');
 
-const sql = fs.readFileSync('supabase/students_migration.sql', 'utf8');
+const sql = fs.readFileSync('supabase/update_plans_v2.sql', 'utf8');
 
 const data = JSON.stringify({
   query: sql

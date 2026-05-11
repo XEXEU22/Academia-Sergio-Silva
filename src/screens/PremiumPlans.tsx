@@ -139,7 +139,11 @@ const PremiumPlans: React.FC = () => {
                 className={`px-8 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all relative ${isAnnual ? 'bg-primary text-white shadow-xl shadow-primary/20' : 'text-slate-500'}`}
               >
                 Anual
-                {isAnnual && <span className="absolute -top-3 -right-3 px-2 py-0.5 bg-emerald-500 text-[8px] rounded-full text-white font-black animate-bounce shadow-lg shadow-emerald-500/20">-20%</span>}
+                {isAnnual && dbPlans.length > 0 && dbPlans[0].annual_price > 0 && (
+                  <span className="absolute -top-3 -right-3 px-2 py-0.5 bg-emerald-500 text-[8px] rounded-full text-white font-black animate-bounce shadow-lg shadow-emerald-500/20">
+                    -{Math.round((1 - dbPlans[0].annual_price / dbPlans[0].monthly_price) * 100)}%
+                  </span>
+                )}
               </button>
            </div>
         </motion.div>
