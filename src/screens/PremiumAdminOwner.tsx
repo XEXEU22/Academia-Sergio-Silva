@@ -65,6 +65,8 @@ const PremiumAdminOwner: React.FC = () => {
   // Master Photo
   const [masterPhoto, setMasterPhoto] = useState('');
   const [masterPhotoInput, setMasterPhotoInput] = useState('');
+  const [masterInstagram, setMasterInstagram] = useState('');
+  const [masterWhatsapp, setMasterWhatsapp] = useState('');
   const [savingPhoto, setSavingPhoto] = useState(false);
   const [photoMsg, setPhotoMsg] = useState<{ok: boolean; text: string} | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -76,28 +78,39 @@ const PremiumAdminOwner: React.FC = () => {
   }, []);
 
   const fetchMasterPhoto = async () => {
-    const { data } = await supabase.from('site_assets').select('url').eq('asset_key', 'master_photo').single();
-    if (data?.url) { setMasterPhoto(data.url); setMasterPhotoInput(data.url); }
+    const { data } = await supabase.from('site_assets').select('*').in('asset_key', ['master_photo', 'master_instagram', 'master_whatsapp']);
+    if (data) {
+      const photo = data.find(a => a.asset_key === 'master_photo');
+      const insta = data.find(a => a.asset_key === 'master_instagram');
+      const whats = data.find(a => a.asset_key === 'master_whatsapp');
+      
+      if (photo?.url) { setMasterPhoto(photo.url); setMasterPhotoInput(photo.url); }
+      if (insta?.url) setMasterInstagram(insta.url);
+      if (whats?.url) setMasterWhatsapp(whats.url);
+    }
   };
 
   const handleSavePhoto = async () => {
-    if (!masterPhotoInput.trim()) return;
     setSavingPhoto(true);
-    const { data: existing } = await supabase.from('site_assets').select('id').eq('asset_key', 'master_photo').maybeSingle();
-    let error;
-    if (existing) {
-      ({ error } = await supabase.from('site_assets').update({ url: masterPhotoInput }).eq('asset_key', 'master_photo'));
-    } else {
-      ({ error } = await supabase.from('site_assets').insert({ asset_key: 'master_photo', url: masterPhotoInput, description: 'Foto do Mestre na aba Mestre' }));
-    }
-    if (error) {
-      setPhotoMsg({ ok: false, text: 'Erro ao salvar: ' + error.message });
-    } else {
+    try {
+      const updates = [
+        { asset_key: 'master_photo', url: masterPhotoInput, description: 'Foto do Mestre' },
+        { asset_key: 'master_instagram', url: masterInstagram, description: 'Link Instagram do Mestre' },
+        { asset_key: 'master_whatsapp', url: masterWhatsapp, description: 'Link WhatsApp do Mestre' }
+      ];
+
+      for (const update of updates) {
+        await supabase.from('site_assets').upsert(update, { onConflict: 'asset_key' });
+      }
+      
       setMasterPhoto(masterPhotoInput);
-      setPhotoMsg({ ok: true, text: 'Foto atualizada com sucesso!' });
+      setPhotoMsg({ ok: true, text: 'Perfil do Mestre atualizado!' });
+    } catch (err: any) {
+      setPhotoMsg({ ok: false, text: 'Erro ao salvar: ' + err.message });
+    } finally {
+      setSavingPhoto(false);
+      setTimeout(() => setPhotoMsg(null), 3000);
     }
-    setSavingPhoto(false);
-    setTimeout(() => setPhotoMsg(null), 3000);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -607,36 +620,36 @@ const PremiumAdminOwner: React.FC = () => {
               className="space-y-6"
             >
               <div className="space-y-2">
-                <h3 className="text-base font-black text-white">Foto do Mestre</h3>
-                <p className="text-xs text-slate-500">Esta imagem aparece na aba <span className="text-primary font-bold">Mestre</span> para todos os alunos.</p>
+                <h3 className="text-base font-black text-white">Perfil do Mestre</h3>
+                <p className="text-xs text-slate-500">Gerencie a imagem e as redes sociais do <span className="text-primary font-bold">Mestre Sérgio</span>.</p>
               </div>
 
               {/* Preview */}
-              {masterPhoto && (
-                <div className="relative size-36 mx-auto">
-                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-[30px] animate-pulse" />
-                  <div className="relative size-36 rounded-full border-4 border-primary overflow-hidden">
-                    <img src={masterPhoto} alt="Mestre" className="w-full h-full object-cover" />
-                  </div>
+              <div className="relative size-36 mx-auto mb-8">
+                <div className="absolute inset-0 bg-primary/20 rounded-full blur-[30px] animate-pulse" />
+                <div className="relative size-36 rounded-full border-4 border-primary overflow-hidden bg-card-dark">
+                  <img src={masterPhoto || `https://ui-avatars.com/api/?name=S+S&background=FF6B00&color=fff`} alt="Mestre" className="w-full h-full object-cover" />
                 </div>
-              )}
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-0 right-0 size-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg border-2 border-background-dark active:scale-90 transition-transform"
+                >
+                  <Camera size={18} />
+                </button>
+              </div>
 
               {/* Input URL & File Upload */}
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1 space-y-3">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">URL da Nova Foto</label>
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Foto (URL ou Galeria)</label>
+                  <div className="flex gap-2">
                     <input
                       type="text"
                       value={masterPhotoInput}
                       onChange={e => setMasterPhotoInput(e.target.value)}
-                      placeholder="https://exemplo.com/foto-mestre.jpg"
-                      className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] py-4 px-5 text-sm focus:outline-none focus:border-primary/50 transition-all"
+                      placeholder="URL da imagem..."
+                      className="flex-1 bg-white/5 border border-white/10 rounded-[1.2rem] py-3.5 px-5 text-sm focus:outline-none focus:border-primary/50 transition-all"
                     />
-                  </div>
-                  
-                  <div className="sm:w-48 space-y-3">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Ou subir arquivo</label>
                     <input 
                       type="file" 
                       ref={fileInputRef} 
@@ -648,16 +661,35 @@ const PremiumAdminOwner: React.FC = () => {
                       type="button"
                       disabled={uploading}
                       onClick={() => fileInputRef.current?.click()}
-                      className={`w-full py-4 rounded-[1.5rem] border text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
-                        uploading ? 'bg-white/5 border-white/5 text-slate-600' : 'bg-primary/20 border-primary/40 text-primary hover:bg-primary/30'
-                      }`}
+                      className="px-5 rounded-[1.2rem] bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all"
                     >
-                      {uploading ? <RefreshCw size={14} className="animate-spin" /> : <Camera size={14} />}
-                      {uploading ? 'Enviando...' : 'Galeria'}
+                      {uploading ? <RefreshCw size={18} className="animate-spin" /> : <Upload size={18} />}
                     </button>
                   </div>
                 </div>
-                <p className="text-[9px] text-slate-600 italic">Dica: Fotos quadradas (1:1) funcionam melhor para o perfil circular.</p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Instagram (Link)</label>
+                    <input
+                      type="text"
+                      value={masterInstagram}
+                      onChange={e => setMasterInstagram(e.target.value)}
+                      placeholder="https://instagram.com/..."
+                      className="w-full bg-white/5 border border-white/10 rounded-[1.2rem] py-3.5 px-5 text-sm focus:outline-none focus:border-primary/50 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">WhatsApp (Link)</label>
+                    <input
+                      type="text"
+                      value={masterWhatsapp}
+                      onChange={e => setMasterWhatsapp(e.target.value)}
+                      placeholder="https://wa.me/..."
+                      className="w-full bg-white/5 border border-white/10 rounded-[1.2rem] py-3.5 px-5 text-sm focus:outline-none focus:border-primary/50 transition-all"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Feedback */}
