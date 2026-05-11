@@ -10,7 +10,11 @@ import {
   Award,
   CheckCircle2,
   Zap,
-  Star
+  Star,
+  Plus,
+  X,
+  Clock as ClockIcon,
+  MessageSquare
 } from '../icons';
 import BottomNav from '../components/BottomNav';
 import { supabase } from '../supabase';
@@ -18,60 +22,127 @@ import { useAuth } from '../contexts/AuthContext';
 
 const PremiumClasses: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [classesByDay, setClassesByDay] = useState<{ [key: string]: any[] }>({});
   const [loading, setLoading] = useState(true);
   const [myEnrollments, setMyEnrollments] = useState<any[]>([]);
+  
+  // Booking Modal State
+  const [selectedClass, setSelectedClass] = useState<any | null>(null);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  
+  // Custom Booking State
+  const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+  const [customDate, setCustomDate] = useState('');
+  const [customTime, setCustomTime] = useState('');
+  const [customModality, setCustomModality] = useState('Wing Chun');
 
   useEffect(() => {
     fetchData();
+    // Check for request intent from Dashboard
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('request') === 'true') {
+      setIsCustomModalOpen(true);
+    }
   }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
+
+  const handleBookClass = async (cls: any) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    
+    setBookingLoading(true);
     try {
-      // 1. Fetch Classes (from today onwards)
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-
-      const { data: clsData } = await supabase
-        .from('classes')
-        .select('*, profiles(full_name)')
-        .gte('start_time', now.toISOString())
-        .order('start_time', { ascending: true });
-
-      if (clsData) {
-        // Group by day
-        const grouped: { [key: string]: any[] } = {};
-        clsData.forEach(cls => {
-          const date = new Date(cls.start_time);
-          const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
-          if (!grouped[dateStr]) grouped[dateStr] = [];
-          grouped[dateStr].push(cls);
+      // 1. Create Enrollment
+      const { error: enrollError } = await supabase
+        .from('enrollments')
+        .insert({
+          user_id: user.id,
+          class_id: cls.id,
+          status: 'confirmed'
         });
-        setClassesByDay(grouped);
+
+      if (enrollError) {
+        if (enrollError.code === '23505') {
+          alert('Você já está inscrito nesta aula!');
+        } else {
+          throw enrollError;
+        }
+      } else {
+        // 2. Send Notification to Master
+        const { data: admins } = await supabase
+          .from('profiles')
+          .select('id')
+          .in('role', ['admin', 'instructor']);
+
+        if (admins && admins.length > 0) {
+          const notifications = admins.map(admin => ({
+            user_id: admin.id,
+            title: 'Novo Aluno Confirmado',
+            message: `${profile?.full_name || 'Um aluno'} confirmou presença na aula de ${cls.title} dia ${new Date(cls.start_time).toLocaleDateString('pt-BR')}.`,
+            type: 'system'
+          }));
+
+          await supabase.from('notifications').insert(notifications);
+        }
+
+        setBookingSuccess(true);
+        setTimeout(() => {
+          setBookingSuccess(false);
+          setSelectedClass(null);
+          fetchData();
+        }, 2000);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert('Erro ao agendar: ' + err.message);
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  const handleCustomBooking = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (!customDate || !customTime) {
+      alert('Por favor, selecione a data e o horário.');
+      return;
+    }
+
+    setBookingLoading(true);
+    try {
+      // Send Notification to Master for Special Request
+      const { data: admins } = await supabase
+        .from('profiles')
+        .select('id')
+        .in('role', ['admin', 'instructor']);
+
+      if (admins && admins.length > 0) {
+        const notifications = admins.map(admin => ({
+          user_id: admin.id,
+          title: 'Solicitação de Horário Especial',
+          message: `${profile?.full_name || 'Um aluno'} solicitou um treino de ${customModality} para o dia ${customDate} às ${customTime}.`,
+          type: 'system'
+        }));
+
+        await supabase.from('notifications').insert(notifications);
       }
 
-      // 2. Fetch Enrollments
-      if (user) {
-        const { data: enrollData } = await supabase
-          .from('enrollments')
-          .select('*, classes(*, profiles(full_name))')
-          .eq('user_id', user.id)
-          .eq('status', 'confirmed');
-        
-        if (enrollData) {
-          const currentNow = new Date();
-          const upcoming = enrollData
-            .filter((e: any) => new Date(e.classes.start_time) >= currentNow)
-            .sort((a: any, b: any) => new Date(a.classes.start_time).getTime() - new Date(b.classes.start_time).getTime());
-          setMyEnrollments(upcoming);
-        }
-      }
-    } catch (err) {
+      setBookingSuccess(true);
+      setTimeout(() => {
+        setBookingSuccess(false);
+        setIsCustomModalOpen(false);
+      }, 2000);
+    } catch (err: any) {
       console.error(err);
+      alert('Erro ao enviar solicitação.');
     } finally {
-      setLoading(false);
+      setBookingLoading(false);
     }
   };
 
@@ -101,6 +172,12 @@ const PremiumClasses: React.FC = () => {
            <div>
               <div className="flex items-center gap-2 mb-2">
                  <div className="px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-[9px] font-black uppercase tracking-[0.2em] text-primary">Cronograma Elite</div>
+                 <button 
+                  onClick={() => setIsCustomModalOpen(true)}
+                  className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-1.5"
+                 >
+                   <Plus size={10} /> Solicitar Data
+                 </button>
               </div>
               <h1 className="text-4xl font-black tracking-tight text-white leading-none">Grade de <br/><span className="text-primary italic">Aulas</span></h1>
            </div>
@@ -201,7 +278,9 @@ const PremiumClasses: React.FC = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: (dayIdx * 0.1) + (idx * 0.05) }}
-                        className="p-6 rounded-[2.5rem] bg-card-dark border border-border-dark hover:border-primary/40 transition-all flex items-center justify-between group"
+                        onClick={() => setSelectedClass(cls)}
+                        className="p-6 rounded-[2.5rem] bg-card-dark border border-border-dark hover:border-primary/40 transition-all flex items-center justify-between group cursor-pointer active:scale-95"
+                      >
                       >
                          <div className="flex items-center gap-5">
                             <div className="flex flex-col items-center justify-center p-4 rounded-3xl bg-background-dark border border-border-dark min-w-[70px] group-hover:border-primary/30 transition-colors">
@@ -240,6 +319,140 @@ const PremiumClasses: React.FC = () => {
       </main>
 
       <BottomNav />
+
+      {/* Booking Modal */}
+      <AnimatePresence>
+        {selectedClass && (
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedClass(null)}
+              className="absolute inset-0 bg-background-dark/80 backdrop-blur-md"
+            />
+            
+            <motion.div 
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              className="relative w-full max-w-sm bg-card-dark border border-border-dark rounded-[3rem] p-8 shadow-2xl"
+            >
+              <div className="size-16 rounded-3xl bg-primary/20 border border-primary/30 text-primary flex items-center justify-center mb-6">
+                <Zap size={32} />
+              </div>
+              
+              <h3 className="text-2xl font-black mb-2">Confirmar Agendamento</h3>
+              <p className="text-slate-400 text-sm mb-8">Deseja confirmar sua presença na aula de <span className="text-white font-bold">{selectedClass.title}</span>?</p>
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <CalendarIcon size={18} className="text-primary" />
+                  <span className="text-xs font-bold uppercase tracking-widest">{new Date(selectedClass.start_time).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</span>
+                </div>
+                <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <ClockIcon size={18} className="text-primary" />
+                  <span className="text-xs font-bold uppercase tracking-widest">{new Date(selectedClass.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              </div>
+
+              {bookingSuccess ? (
+                <div className="w-full py-5 rounded-[1.5rem] bg-emerald-500 text-white flex items-center justify-center gap-2 font-black uppercase tracking-widest text-[11px]">
+                  <CheckCircle2 size={20} /> Agendado!
+                </div>
+              ) : (
+                <div className="flex gap-4">
+                  <button onClick={() => setSelectedClass(null)} className="flex-1 py-5 rounded-[1.5rem] bg-white/5 text-[10px] font-black uppercase tracking-widest">Cancelar</button>
+                  <button 
+                    onClick={() => handleBookClass(selectedClass)}
+                    disabled={bookingLoading}
+                    className="flex-1 py-5 rounded-[1.5rem] bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/30 disabled:opacity-50"
+                  >
+                    {bookingLoading ? 'Processando...' : 'Confirmar'}
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+
+        {isCustomModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCustomModalOpen(false)}
+              className="absolute inset-0 bg-background-dark/80 backdrop-blur-md"
+            />
+            
+            <motion.div 
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              className="relative w-full max-w-sm bg-card-dark border border-border-dark rounded-[3rem] p-8 shadow-2xl"
+            >
+              <button onClick={() => setIsCustomModalOpen(false)} className="absolute top-6 right-6 p-2 rounded-xl bg-white/5 border border-white/5">
+                <X size={18} />
+              </button>
+
+              <div className="size-16 rounded-3xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 flex items-center justify-center mb-6">
+                <ClockIcon size={32} />
+              </div>
+              
+              <h3 className="text-2xl font-black mb-2">Solicitar Horário</h3>
+              <p className="text-slate-400 text-sm mb-8">Selecione o dia e horário que você gostaria de treinar.</p>
+              
+              <div className="space-y-4 mb-8">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Data</label>
+                  <input 
+                    type="date" 
+                    value={customDate}
+                    onChange={e => setCustomDate(e.target.value)}
+                    className="w-full bg-background-dark border border-border-dark rounded-2xl p-4 text-sm font-bold text-white focus:border-primary/50 outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Horário</label>
+                  <input 
+                    type="time" 
+                    value={customTime}
+                    onChange={e => setCustomTime(e.target.value)}
+                    className="w-full bg-background-dark border border-border-dark rounded-2xl p-4 text-sm font-bold text-white focus:border-primary/50 outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Modalidade</label>
+                  <select 
+                    value={customModality}
+                    onChange={e => setCustomModality(e.target.value)}
+                    className="w-full bg-background-dark border border-border-dark rounded-2xl p-4 text-sm font-bold text-white focus:border-primary/50 outline-none appearance-none"
+                  >
+                    <option value="Wing Chun">Wing Chun</option>
+                    <option value="Kickboxing">Kickboxing</option>
+                    <option value="Defesa Pessoal">Defesa Pessoal</option>
+                  </select>
+                </div>
+              </div>
+
+              {bookingSuccess ? (
+                <div className="w-full py-5 rounded-[1.5rem] bg-emerald-500 text-white flex items-center justify-center gap-2 font-black uppercase tracking-widest text-[11px]">
+                  <MessageSquare size={20} /> Solicitação Enviada!
+                </div>
+              ) : (
+                <button 
+                  onClick={handleCustomBooking}
+                  disabled={bookingLoading}
+                  className="w-full py-5 rounded-[1.5rem] bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-500/30 disabled:opacity-50"
+                >
+                  {bookingLoading ? 'Enviando...' : 'Solicitar Agendamento'}
+                </button>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

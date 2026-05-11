@@ -16,16 +16,91 @@ import {
   Target,
   Video,
   ShieldCheck,
-  Image as ImageIcon,
+  ImageIcon,
   LogOut
 } from '../icons';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../supabase';
 
 const PremiumDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { profile, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
+  const [nextClass, setNextClass] = React.useState<any | null>(null);
+  const [isEnrolled, setIsEnrolled] = React.useState(false);
+  const [bookingLoading, setBookingLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (profile) {
+      fetchNextClass();
+    }
+  }, [profile]);
+
+  const fetchNextClass = async () => {
+    const now = new Date();
+    const { data: clsData } = await supabase
+      .from('classes')
+      .select('*, profiles(full_name)')
+      .gte('start_time', now.toISOString())
+      .order('start_time', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (clsData) {
+      setNextClass(clsData);
+      // Check if user is already enrolled
+      if (user) {
+        const { data: enrollData } = await supabase
+          .from('enrollments')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('class_id', clsData.id)
+          .eq('status', 'confirmed')
+          .maybeSingle();
+        
+        setIsEnrolled(!!enrollData);
+      }
+    }
+  };
+
+  const handleBookNextClass = async () => {
+    if (!user || !nextClass) return;
+    setBookingLoading(true);
+    try {
+      const { error } = await supabase
+        .from('enrollments')
+        .insert({
+          user_id: user.id,
+          class_id: nextClass.id,
+          status: 'confirmed'
+        });
+
+      if (!error) {
+        setIsEnrolled(true);
+        // Send Notification
+        const { data: admins } = await supabase
+          .from('profiles')
+          .select('id')
+          .in('role', ['admin', 'instructor']);
+
+        if (admins && admins.length > 0) {
+          await supabase.from('notifications').insert(
+            admins.map(admin => ({
+              user_id: admin.id,
+              title: 'Presença Confirmada',
+              message: `${profile?.full_name} confirmou presença em ${nextClass.title} pelo Painel.`,
+              type: 'system'
+            }))
+          );
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setBookingLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -62,7 +137,6 @@ const PremiumDashboard: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col text-slate-100 font-display selection:bg-primary selection:text-white relative">
       <div className="site-bg-overlay" />
-      {/* Premium Gradient Header */}
       <header className="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-border-dark">
         <div className="flex items-center gap-3">
           <motion.div 
@@ -128,20 +202,9 @@ const PremiumDashboard: React.FC = () => {
         animate="visible"
         className="flex-1 overflow-y-auto pb-32 px-6 pt-8 space-y-10"
       >
-        {/* Personalized Welcome */}
         <section>
-          <motion.p 
-            variants={itemVariants}
-            className="text-primary font-bold text-xs uppercase tracking-[0.2em] mb-2"
-          >
-            Sua Jornada de Hoje
-          </motion.p>
-          <motion.h1 
-            variants={itemVariants}
-            className="text-4xl font-extrabold tracking-tight leading-none mb-4 bg-gradient-to-r from-white to-slate-500 bg-clip-text text-transparent"
-          >
-            Osu, {profile?.full_name?.split(' ')[0] || 'Guerreiro'}!
-          </motion.h1>
+          <motion.p variants={itemVariants} className="text-primary font-bold text-xs uppercase tracking-[0.2em] mb-2">Sua Jornada de Hoje</motion.p>
+          <motion.h1 variants={itemVariants} className="text-4xl font-extrabold tracking-tight leading-none mb-4 bg-gradient-to-r from-white to-slate-500 bg-clip-text text-transparent">Osu, {profile?.full_name?.split(' ')[0] || 'Guerreiro'}!</motion.h1>
           <motion.p variants={itemVariants} className="text-slate-400 max-w-xs text-sm leading-relaxed">
             {!profile && loading === false 
               ? 'Conectando ao seu perfil...' 
@@ -152,13 +215,10 @@ const PremiumDashboard: React.FC = () => {
           </motion.p>
         </section>
 
-        {/* Dynamic Progress Card */}
         <motion.section variants={itemVariants} className="relative group">
           <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-primary/10 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
           <div className="relative bg-card-dark border border-border-dark rounded-3xl p-6 overflow-hidden">
-            {/* Background Decorative Element */}
             <div className="absolute -right-12 -top-12 size-48 bg-primary/10 rounded-full blur-3xl" />
-            
             <div className="flex items-center justify-between mb-6">
               <div className="space-y-1">
                 <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Graduação Atual</p>
@@ -172,17 +232,9 @@ const PremiumDashboard: React.FC = () => {
                 <p className="text-xl font-bold text-primary">{profile?.experience_years || 0}0%</p>
               </div>
             </div>
-
             <div className="space-y-3">
               <div className="h-3 w-full bg-background-dark rounded-full overflow-hidden p-0.5 border border-border-dark">
-                <motion.div 
-                   initial={{ width: 0 }}
-                   animate={{ width: `${(profile?.experience_years || 0) * 10}%` }}
-                   transition={{ duration: 1.5, ease: "easeOut" }}
-                   className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full relative"
-                >
-                  <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.1)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.1)_50%,rgba(255,255,255,0.1)_75%,transparent_75%,transparent)] bg-[length:20px_20px] animate-[slide_1s_linear_infinite]" />
-                </motion.div>
+                <motion.div initial={{ width: 0 }} animate={{ width: `${(profile?.experience_years || 0) * 10}%` }} transition={{ duration: 1.5, ease: "easeOut" }} className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full relative" />
               </div>
               <div className="flex justify-between text-[10px] font-bold text-slate-500">
                 <span>BRANCA</span>
@@ -192,11 +244,10 @@ const PremiumDashboard: React.FC = () => {
           </div>
         </motion.section>
 
-        {/* Quick Actions Grid */}
         <section className="grid grid-cols-2 gap-4">
           {[
             { icon: Calendar, label: 'Ver Aulas', color: 'bg-primary/10 text-primary', desc: 'Grade Horária', path: '/aulas' },
-            { icon: TrendingUp, label: 'Evolução', color: 'bg-emerald-500/10 text-emerald-400', desc: 'Estatísticas' },
+            { icon: Clock, label: 'Solicitar', color: 'bg-emerald-500/10 text-emerald-400', desc: 'Horário Especial', path: '/aulas?request=true' },
             { icon: ImageIcon, label: 'Galeria', color: 'bg-primary/10 text-primary', desc: 'Momentos', path: '/gallery' },
             { icon: isAdmin ? ShieldCheck : Trophy, label: isAdmin ? 'Admin' : 'Conquistas', color: isAdmin ? 'bg-indigo-500/10 text-indigo-400' : 'bg-amber-500/10 text-amber-400', desc: isAdmin ? 'Acesso Master' : '8 Medalhas', path: isAdmin ? '/admin' : undefined },
           ].map((action, idx) => (
@@ -217,69 +268,48 @@ const PremiumDashboard: React.FC = () => {
           ))}
         </section>
 
-        {/* Upcoming Class Premium Card */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold tracking-tight">Sua Próxima Batalha</h3>
-            <button 
-               onClick={() => navigate('/aulas')}
-               className="text-primary text-xs font-bold uppercase tracking-wider flex items-center gap-1 hover:gap-2 transition-all"
-            >
-              Ver Agenda <ChevronRight size={14} />
-            </button>
+            <button onClick={() => navigate('/aulas')} className="text-primary text-xs font-bold uppercase tracking-wider flex items-center gap-1 hover:gap-2 transition-all">Ver Agenda <ChevronRight size={14} /></button>
           </div>
-
-          <motion.div 
-            variants={itemVariants}
-            className="group relative rounded-[2rem] overflow-hidden bg-card-dark border border-border-dark"
-          >
+          <motion.div variants={itemVariants} className="group relative rounded-[2rem] overflow-hidden bg-card-dark border border-border-dark">
             <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/40 to-transparent z-10" />
-            <img 
-              src="https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop" 
-              alt="Training" 
-              className="w-full h-56 object-cover object-center group-hover:scale-110 transition-transform duration-700 opacity-60"
-            />
-            
+            <img src="https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop" alt="Training" className="w-full h-56 object-cover object-center group-hover:scale-110 transition-transform duration-700 opacity-60" />
             <div className="absolute inset-0 z-20 p-6 flex flex-col justify-end">
               <div className="flex items-center gap-2 mb-2">
-                <span className="px-2 py-0.5 rounded-full bg-primary/20 border border-primary/30 text-primary text-[10px] font-black uppercase tracking-widest animate-pulse">
-                  Ao Vivo em 45min
+                <span className="px-2 py-0.5 rounded-full bg-primary/20 border border-primary/30 text-primary text-[9px] font-black uppercase tracking-widest animate-pulse">
+                  {nextClass ? (new Date(nextClass.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })) : '---'}
                 </span>
-                <span className="flex items-center gap-1 text-white/60 text-[10px] font-bold uppercase tracking-widest">
-                  <Users size={12} /> +12 Confirmados
-                </span>
+                <span className="flex items-center gap-1 text-white/60 text-[10px] font-bold uppercase tracking-widest"><Users size={12} /> {nextClass ? 'Vagas Abertas' : 'Aguardando Grade'}</span>
               </div>
-              
-              <h4 className="text-2xl font-black text-white mb-2 tracking-tight">Defesa Pessoal Avançada</h4>
-              
+              <h4 className="text-2xl font-black text-white mb-2 tracking-tight">{nextClass?.title || 'Seja Bem-vindo'}</h4>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="size-8 rounded-full border border-white/20 overflow-hidden ring-2 ring-white/5">
-                    <img 
-                      src="https://ui-avatars.com/api/?name=S+S&background=FF6B00&color=fff" 
-                      alt="Sensei" 
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={`https://ui-avatars.com/api/?name=${nextClass?.profiles?.full_name || 'Mestre'}&background=FF6B00&color=fff`} alt="Sensei" className="w-full h-full object-cover" />
                   </div>
                   <div className="leading-tight">
-                    <p className="text-xs font-bold text-white">Mestre Sérgio</p>
-                    <p className="text-[10px] text-white/50">Grão Mestre 5º Dan</p>
+                    <p className="text-xs font-bold text-white">{nextClass?.profiles?.full_name || 'Mestre Sérgio'}</p>
+                    <p className="text-[10px] text-white/50">{nextClass?.level || 'Todos Níveis'}</p>
                   </div>
                 </div>
-                
-                <motion.button 
-                  whileHover={{ scale: 1.05, backgroundColor: 'var(--primary)' }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-6 py-3 bg-primary text-white rounded-2xl font-bold text-sm shadow-xl shadow-primary/20"
-                >
-                  Presença
-                </motion.button>
+                {nextClass && (
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleBookNextClass}
+                    disabled={isEnrolled || bookingLoading}
+                    className={`px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl transition-all ${isEnrolled ? 'bg-emerald-500 text-white' : 'bg-primary text-white shadow-primary/20 hover:bg-primary-dark'}`}
+                  >
+                    {bookingLoading ? '...' : isEnrolled ? 'Confirmado' : 'Presença'}
+                  </motion.button>
+                )}
               </div>
             </div>
           </motion.div>
         </section>
 
-        {/* Weekly Stats Section */}
         <section className="space-y-4">
            <h3 className="text-lg font-bold tracking-tight">Consistência da Semana</h3>
            <div className="grid grid-cols-7 gap-1.5 h-24 items-end">
@@ -294,28 +324,15 @@ const PremiumDashboard: React.FC = () => {
              ].map((stat, i) => (
                <div key={i} className="flex flex-col items-center gap-2 group flex-1">
                  <div className="w-full relative">
-                   <motion.div 
-                     initial={{ height: 0 }}
-                     animate={{ height: `${stat.val * 80}px` }}
-                     className={`w-full rounded-t-xl transition-colors duration-300 ${stat.highlight ? 'bg-primary shadow-[0_0_15px_rgba(255,107,0,0.4)]' : 'bg-card-dark group-hover:bg-slate-700'}`}
-                   />
+                   <motion.div initial={{ height: 0 }} animate={{ height: `${stat.val * 80}px` }} className={`w-full rounded-t-xl transition-colors duration-300 ${stat.highlight ? 'bg-primary shadow-[0_0_15px_rgba(255,107,0,0.4)]' : 'bg-card-dark group-hover:bg-slate-700'}`} />
                  </div>
                  <span className={`text-[10px] font-black ${stat.highlight ? 'text-primary' : 'text-slate-500'}`}>{stat.day}</span>
                </div>
              ))}
            </div>
         </section>
-
       </motion.main>
-      
       <BottomNav />
-
-      <style>{`
-        @keyframes slide {
-          0% { background-position: 0 0; }
-          100% { background-position: 40px 40px; }
-        }
-      `}</style>
     </div>
   );
 };
