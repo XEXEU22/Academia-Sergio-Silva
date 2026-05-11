@@ -146,6 +146,7 @@ export default function PremiumAdminStudents() {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<TabFilter>('todos');
   const [modalityFilter, setModalityFilter] = useState('');
+  const [beltFilter, setBeltFilter] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'enrollment' | 'payment'>('name');
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
 
@@ -259,6 +260,7 @@ export default function PremiumAdminStudents() {
       (s.modality || '').toLowerCase().includes(search.toLowerCase())
     );
     if (modalityFilter) list = list.filter(s => s.modality === modalityFilter);
+    if (beltFilter) list = list.filter(s => (s.belt_level || '').includes(beltFilter));
     switch(activeTab) {
       case 'pagos': list = list.filter(s => s.payment_status === 'paid'); break;
       case 'pendentes': list = list.filter(s => !s.payment_status || s.payment_status === 'pending'); break;
@@ -494,6 +496,22 @@ export default function PremiumAdminStudents() {
             <option value="MMA">MMA</option>
           </select>
           <select
+            value={beltFilter}
+            onChange={e => setBeltFilter(e.target.value)}
+            className="bg-card-dark border border-border-dark rounded-2xl px-4 text-xs text-slate-400 focus:outline-none focus:border-primary/50 appearance-none"
+          >
+            <option value="">Faixas</option>
+            <option value="Branca">Branca</option>
+            <option value="Cinza">Cinza</option>
+            <option value="Amarela">Amarela</option>
+            <option value="Laranja">Laranja</option>
+            <option value="Verde">Verde</option>
+            <option value="Azul">Azul</option>
+            <option value="Roxa">Roxa</option>
+            <option value="Marrom">Marrom</option>
+            <option value="Preta">Preta</option>
+          </select>
+          <select
             value={sortBy}
             onChange={e => setSortBy(e.target.value as any)}
             className="bg-card-dark border border-border-dark rounded-2xl px-4 text-xs text-slate-400 focus:outline-none focus:border-primary/50 appearance-none"
@@ -557,8 +575,8 @@ export default function PremiumAdminStudents() {
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-black text-white truncate">{student.full_name || 'Usuário Sem Nome'}</h3>
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        <span className="text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 text-slate-400">
-                          <Award size={10} className="text-primary"/> {student.belt_level || 'Branca'}
+                        <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 text-primary bg-primary/5 px-2 py-1 rounded-lg border border-primary/10">
+                          <Award size={12} className="fill-current"/> {student.belt_level || 'Faixa Branca'}
                         </span>
                         <span className={`text-[9px] font-black uppercase tracking-wider flex items-center gap-1 px-2 py-0.5 rounded-full border ${badge.bg} ${badge.color}`}>
                           <BadgeIcon size={10} /> {badge.label}

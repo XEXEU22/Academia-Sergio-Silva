@@ -64,7 +64,8 @@ export default function PremiumAdminClasses() {
   };
 
   const fetchAllStudents = async () => {
-    const { data } = await supabase.from('profiles').select('id, full_name, email').eq('role', 'student');
+    // Puxa todos os perfis cadastrados, exceto administradores (opcional)
+    const { data } = await supabase.from('profiles').select('id, full_name, email, role');
     setAllStudents(data || []);
   };
 
@@ -97,7 +98,9 @@ export default function PremiumAdminClasses() {
       start_time_local: '',
       duration_minutes: 60,
       max_spots: 20,
-      status: 'available'
+      status: 'available',
+      is_recurring: false,
+      weeks_to_generate: 4
     });
     setIsNew(true);
   };
@@ -114,25 +117,42 @@ export default function PremiumAdminClasses() {
     setSaving(true);
     try {
       const startTimeISO = new Date(editingClass.start_time_local).toISOString();
-      const payload = {
+      
+      const isRecurring = editingClass.is_recurring;
+      const weeks = parseInt(editingClass.weeks_to_generate) || 1;
+
+      const basePayload = {
         title: editingClass.title,
         instructor_id: editingClass.instructor_id,
         category: editingClass.category,
         level: editingClass.level,
-        start_time: startTimeISO,
         duration_minutes: parseInt(editingClass.duration_minutes),
         max_spots: parseInt(editingClass.max_spots),
         status: editingClass.status
       };
 
       if (isNew) {
-        await supabase.from('classes').insert(payload);
+        if (isRecurring && weeks > 1) {
+          const bulkPayloads = [];
+          for (let i = 0; i < weeks; i++) {
+            const date = new Date(editingClass.start_time_local);
+            date.setDate(date.getDate() + (i * 7));
+            bulkPayloads.push({
+              ...basePayload,
+              start_time: date.toISOString()
+            });
+          }
+          await supabase.from('classes').insert(bulkPayloads);
+        } else {
+          await supabase.from('classes').insert({ ...basePayload, start_time: startTimeISO });
+        }
       } else {
-        await supabase.from('classes').update(payload).eq('id', editingClass.id);
+        await supabase.from('classes').update({ ...basePayload, start_time: startTimeISO }).eq('id', editingClass.id);
       }
+      
       await fetchData();
       setEditingClass(null);
-      alert('Aula salva com sucesso! ✅');
+      alert('Aula(s) salva(s) com sucesso! ✅');
     } catch (err: any) {
       console.error('Erro ao salvar aula:', err);
       alert('Erro ao salvar: ' + (err.message || 'Verifique os campos e tente novamente.'));
@@ -392,9 +412,34 @@ export default function PremiumAdminClasses() {
 
                <div className="grid grid-cols-2 gap-4">
                   <label className="block col-span-2">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 mb-1 block">Data e Hora</span>
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 mb-1 block">Data e Hora Inicial</span>
                     <input type="datetime-local" required value={editingClass.start_time_local} onChange={e => setEditingClass({...editingClass, start_time_local: e.target.value})} className="w-full bg-card-dark border border-border-dark py-4 px-5 rounded-[1.5rem] text-sm text-white focus:outline-none focus:border-primary" style={{ colorScheme: 'dark' }} />
                   </label>
+
+                  {isNew && (
+                    <div className="col-span-2 space-y-4 pt-2">
+                      <div 
+                        onClick={() => setEditingClass({...editingClass, is_recurring: !editingClass.is_recurring})}
+                        className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${editingClass.is_recurring ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 border-white/5 text-slate-500'}`}
+                      >
+                         <div className="flex items-center gap-3">
+                            <RefreshCw size={16} className={editingClass.is_recurring ? 'animate-spin' : ''} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Tornar Recorrente (Semanal)</span>
+                         </div>
+                         <div className={`size-5 rounded-full border-2 flex items-center justify-center ${editingClass.is_recurring ? 'bg-primary border-primary' : 'border-slate-700'}`}>
+                            {editingClass.is_recurring && <CheckCircle2 size={12} className="text-white" />}
+                         </div>
+                      </div>
+
+                      {editingClass.is_recurring && (
+                        <label className="block">
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 mb-1 block">Gerar por quantas semanas?</span>
+                          <input type="number" min="2" max="12" value={editingClass.weeks_to_generate} onChange={e => setEditingClass({...editingClass, weeks_to_generate: e.target.value})} className="w-full bg-card-dark border border-primary/30 py-4 px-5 rounded-[1.5rem] text-sm text-white focus:outline-none focus:border-primary" />
+                        </label>
+                      )}
+                    </div>
+                  )}
+
                   <label className="block">
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 mb-1 block">Duração (min)</span>
                     <input type="number" required value={editingClass.duration_minutes} onChange={e => setEditingClass({...editingClass, duration_minutes: e.target.value})} className="w-full bg-card-dark border border-border-dark py-4 px-5 rounded-[1.5rem] text-sm text-white focus:outline-none focus:border-primary" />
