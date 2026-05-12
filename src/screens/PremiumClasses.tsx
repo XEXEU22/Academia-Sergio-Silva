@@ -38,6 +38,52 @@ const PremiumClasses: React.FC = () => {
   const [customTime, setCustomTime] = useState('');
   const [customModality, setCustomModality] = useState('Wing Chun');
 
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // 1. Fetch upcoming classes from today onwards
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      
+      const { data: clsData, error: clsError } = await supabase
+        .from('classes')
+        .select('*, profiles:instructor_id (full_name)')
+        .gte('start_time', now.toISOString())
+        .order('start_time', { ascending: true });
+
+      if (clsError) throw clsError;
+
+      // 2. Fetch my enrollments
+      if (user) {
+        const { data: enrollData, error: enrollError } = await supabase
+          .from('enrollments')
+          .select('*, classes (*, profiles:instructor_id (full_name))')
+          .eq('user_id', user.id)
+          .eq('status', 'confirmed');
+        
+        if (enrollError) throw enrollError;
+        setMyEnrollments(enrollData || []);
+      }
+
+      // 3. Group by day
+      if (clsData) {
+        const grouped: { [key: string]: any[] } = {};
+        clsData.forEach(cls => {
+          const date = new Date(cls.start_time);
+          const dayName = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+          const capitalizedDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+          if (!grouped[capitalizedDay]) grouped[capitalizedDay] = [];
+          grouped[capitalizedDay].push(cls);
+        });
+        setClassesByDay(grouped);
+      }
+    } catch (err: any) {
+      console.error('Error fetching classes:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
     // Check for request intent from Dashboard
@@ -45,7 +91,7 @@ const PremiumClasses: React.FC = () => {
     if (params.get('request') === 'true') {
       setIsCustomModalOpen(true);
     }
-  }, []);
+  }, [user]);
 
 
   const handleBookClass = async (cls: any) => {
@@ -280,7 +326,6 @@ const PremiumClasses: React.FC = () => {
                         transition={{ delay: (dayIdx * 0.1) + (idx * 0.05) }}
                         onClick={() => setSelectedClass(cls)}
                         className="p-6 rounded-[2.5rem] bg-card-dark border border-border-dark hover:border-primary/40 transition-all flex items-center justify-between group cursor-pointer active:scale-95"
-                      >
                       >
                          <div className="flex items-center gap-5">
                             <div className="flex flex-col items-center justify-center p-4 rounded-3xl bg-background-dark border border-border-dark min-w-[70px] group-hover:border-primary/30 transition-colors">
