@@ -162,7 +162,20 @@ const PremiumClasses: React.FC = () => {
 
     setBookingLoading(true);
     try {
-      // Send Notification to Master for Special Request
+      // 1. Save request to the database
+      const { error: requestError } = await supabase
+        .from('class_requests')
+        .insert({
+          user_id: user.id,
+          modality: customModality,
+          requested_date: customDate,
+          requested_time: customTime,
+          status: 'pending'
+        });
+
+      if (requestError) throw requestError;
+
+      // 2. Send Notification to Master for Special Request
       const { data: admins } = await supabase
         .from('profiles')
         .select('id')
@@ -172,7 +185,7 @@ const PremiumClasses: React.FC = () => {
         const notifications = admins.map(admin => ({
           user_id: admin.id,
           title: 'Solicitação de Horário Especial',
-          message: `${profile?.full_name || 'Um aluno'} solicitou um treino de ${customModality} para o dia ${customDate} às ${customTime}.`,
+          message: `${profile?.full_name || 'Um aluno'} solicitou um treino de ${customModality} para o dia ${customDate} às ${customTime}. Verifique o painel de pedidos.`,
           type: 'system'
         }));
 
@@ -183,10 +196,12 @@ const PremiumClasses: React.FC = () => {
       setTimeout(() => {
         setBookingSuccess(false);
         setIsCustomModalOpen(false);
+        setCustomDate('');
+        setCustomTime('');
       }, 2000);
     } catch (err: any) {
       console.error(err);
-      alert('Erro ao enviar solicitação.');
+      alert('Erro ao enviar solicitação: ' + (err.message || 'Erro desconhecido'));
     } finally {
       setBookingLoading(false);
     }

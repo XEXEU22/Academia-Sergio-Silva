@@ -37,9 +37,13 @@ export default function PremiumAdminClasses() {
   const [studentSearch, setStudentSearch] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
 
+  const [requests, setRequests] = useState<any[]>([]);
+  const [showRequests, setShowRequests] = useState(false);
+
   useEffect(() => {
     fetchData();
     fetchAllStudents();
+    fetchRequests();
   }, []);
 
   const fetchData = async () => {
@@ -67,6 +71,26 @@ export default function PremiumAdminClasses() {
     // Puxa todos os perfis cadastrados, exceto administradores (opcional)
     const { data } = await supabase.from('profiles').select('id, full_name, email, role');
     setAllStudents(data || []);
+  };
+
+  const fetchRequests = async () => {
+    try {
+      const { data } = await supabase
+        .from('class_requests')
+        .select('*, profiles:user_id (full_name)')
+        .order('created_at', { ascending: false });
+      setRequests(data || []);
+    } catch (err) {
+      console.error('Error fetching requests:', err);
+    }
+  };
+
+  const handleRequestAction = async (requestId: string, status: 'confirmed' | 'rejected') => {
+    const { error } = await supabase.from('class_requests').update({ status }).eq('id', requestId);
+    if (!error) {
+      fetchRequests();
+      alert(`Solicitação ${status === 'confirmed' ? 'confirmada' : 'rejeitada'} com sucesso!`);
+    }
   };
 
   const fetchEnrollments = async (classId: string) => {
@@ -225,9 +249,23 @@ export default function PremiumAdminClasses() {
       </header>
 
       <main className="flex-1 px-6 pt-10 pb-32">
-        <div className="mb-8">
-           <h1 className="text-3xl font-black">Aulas e Horários</h1>
-           <p className="text-slate-500 text-sm mt-1">Gerencie a grade e os alunos presentes.</p>
+        <div className="mb-8 flex items-center justify-between">
+           <div>
+             <h1 className="text-3xl font-black">Aulas e Horários</h1>
+             <p className="text-slate-500 text-sm mt-1">Gerencie a grade e os alunos presentes.</p>
+           </div>
+           {requests.length > 0 && (
+             <button 
+               onClick={() => setShowRequests(true)}
+               className="relative p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 hover:bg-amber-500 hover:text-white transition-all flex items-center gap-2 group"
+             >
+                <Bell size={20} className="group-hover:animate-bounce" />
+                <span className="text-[10px] font-black uppercase">Pedidos</span>
+                <span className="absolute -top-1 -right-1 size-5 bg-amber-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-background-dark animate-pulse">
+                  {requests.filter(r => r.status === 'pending').length}
+                </span>
+             </button>
+           )}
         </div>
 
         {loading ? (
@@ -463,6 +501,75 @@ export default function PremiumAdminClasses() {
                  {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><Save size={18} /> Salvar Aula</>}
                </button>
             </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL PEDIDOS DE HORÁRIO */}
+      <AnimatePresence>
+        {showRequests && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] bg-background-dark/98 backdrop-blur-2xl flex flex-col p-6"
+          >
+            <div className="flex items-center justify-between mt-4 mb-8">
+               <div>
+                  <h2 className="text-xl font-black tracking-widest uppercase">Solicitações de Horário</h2>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Pedidos especiais dos alunos</p>
+               </div>
+               <button onClick={() => setShowRequests(false)} className="p-2 rounded-full bg-white/10 text-white">
+                 <X size={20} />
+               </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4 no-scrollbar pb-20">
+               {requests.length === 0 ? (
+                 <div className="py-20 text-center text-slate-600 text-[10px] uppercase font-bold tracking-widest border border-dashed border-border-dark rounded-3xl">
+                    Nenhuma solicitação encontrada.
+                 </div>
+               ) : (
+                 requests.map(req => (
+                   <div key={req.id} className="p-6 rounded-[2rem] bg-card-dark border border-border-dark flex flex-col gap-4">
+                      <div className="flex justify-between items-start">
+                         <div>
+                            <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border mb-2 inline-block ${
+                               req.status === 'pending' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
+                               req.status === 'confirmed' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' :
+                               'bg-red-500/10 border-red-500/20 text-red-500'
+                            }`}>
+                               {req.status === 'pending' ? 'Pendente' : req.status === 'confirmed' ? 'Confirmado' : 'Rejeitado'}
+                            </span>
+                            <h3 className="text-sm font-black text-white">{req.profiles?.full_name || 'Aluno'}</h3>
+                            <p className="text-xs text-primary font-bold">{req.modality}</p>
+                         </div>
+                         <div className="text-right">
+                            <p className="text-[10px] font-black text-white uppercase">{new Date(req.requested_date).toLocaleDateString('pt-BR')}</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase">{req.requested_time}</p>
+                         </div>
+                      </div>
+
+                      {req.status === 'pending' && (
+                        <div className="flex gap-2 mt-2">
+                           <button 
+                             onClick={() => handleRequestAction(req.id, 'confirmed')}
+                             className="flex-1 py-3 rounded-xl bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20"
+                           >
+                             Confirmar
+                           </button>
+                           <button 
+                             onClick={() => handleRequestAction(req.id, 'rejected')}
+                             className="flex-1 py-3 rounded-xl bg-white/5 text-slate-400 text-[10px] font-black uppercase tracking-widest border border-white/10"
+                           >
+                             Recusar
+                           </button>
+                        </div>
+                      )}
+                   </div>
+                 ))
+               )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
