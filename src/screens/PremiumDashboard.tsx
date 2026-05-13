@@ -16,7 +16,7 @@ import {
   Target,
   Video,
   ShieldCheck,
-  ImageIcon,
+  Image as ImageIcon,
   LogOut
 } from '../icons';
 import { useNavigate } from 'react-router-dom';
