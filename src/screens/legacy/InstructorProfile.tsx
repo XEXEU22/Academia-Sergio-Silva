@@ -78,7 +78,7 @@ const InstructorProfile: React.FC = () => {
             Especialidades
           </h3>
           <div className="flex flex-wrap gap-2">
-            {['Karatê', 'Muay Thai', 'Wing Chun'].map(spec => (
+            {['Muay Thai', 'Wing Chun', 'Kickboxing'].map(spec => (
               <span key={spec} className="px-5 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 text-sm font-bold">
                 {spec}
               </span>

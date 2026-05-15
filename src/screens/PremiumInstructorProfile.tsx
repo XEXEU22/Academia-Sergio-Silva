@@ -230,10 +230,9 @@ const PremiumInstructorProfile: React.FC = () => {
            <h3 className="text-sm font-black text-slate-500 uppercase tracking-[0.3em] mb-4">Mastery Skills</h3>
            <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'Jiu-Jitsu', color: 'bg-blue-500/10 border-blue-500/20 text-blue-400', level: '100%', icon: Shield },
                 { label: 'Muay Thai', color: 'bg-red-500/10 border-red-500/20 text-red-400', level: '95%', icon: Zap },
-                { label: 'Wing Chun', color: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400', level: '88%', icon: Target },
-                { label: 'Karatê', color: 'bg-amber-500/10 border-amber-500/20 text-amber-400', level: '92%', icon: Award }
+                { label: 'Wing Chun', color: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400', level: '100%', icon: Target },
+                { label: 'Kickboxing', color: 'bg-blue-500/10 border-blue-500/20 text-blue-400', level: '92%', icon: Award }
               ].map((skill, idx) => (
                 <div key={idx} className={`p-4 rounded-2xl border ${skill.color} flex flex-col gap-3 group overflow-hidden relative`}>
                    <div className="absolute -right-2 -bottom-2 opacity-10 group-hover:scale-150 transition-transform"><skill.icon size={48} /></div>
