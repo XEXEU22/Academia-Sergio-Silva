@@ -65,8 +65,10 @@ const InstructorProfile: React.FC = () => {
             <History className="text-primary" size={20} />
             Biografia
           </h3>
-          <p className="text-slate-400 leading-relaxed text-sm">
-            Mestre Sérgio é um praticante dedicado com mais de 15 anos de experiência em várias disciplinas de artes marciais. Ele se concentra em desenvolver disciplina, clareza mental e força física em seus alunos, combinando filosofia tradicional com técnicas modernas de combate.
+          <p className="text-slate-400 leading-relaxed text-sm whitespace-pre-line">
+            Mestre Sergio Silva é uma referência na preservação e evolução das artes marciais. Iniciando sua jornada nos anos 90, dedicou as últimas três décadas ao domínio e ao aperfeiçoamento técnico de dois pilares do combate: a precisão do Wing Chun e a explosão do Muay Thai.
+
+            Mais do que ensinar golpes, o Mestre Sergio é reconhecido por desenvolver técnicas aprimoradas que unem a sabedoria tradicional à eficiência moderna. Sua missão é guiar alunos de todos os níveis na busca pela excelência física, mental e técnica.
           </p>
         </section>
 

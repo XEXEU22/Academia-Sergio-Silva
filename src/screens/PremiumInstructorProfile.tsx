@@ -219,9 +219,10 @@ const PremiumInstructorProfile: React.FC = () => {
               <div className="p-2 rounded-xl bg-card-dark border border-border-dark text-primary"><History size={18} /></div>
               <h3 className="text-lg font-black tracking-tight uppercase tracking-widest">Biografia Profissional</h3>
            </div>
-           <p className="text-slate-400 text-sm leading-relaxed tracking-wide bg-card-dark/50 p-6 rounded-[2rem] border border-border-dark">
-             Especialista em <span className="text-white font-bold">Defesa Pessoal Moderna</span> e Krav Maga, o Mestre Sérgio refinou sua técnica em diversos centros globais. Seu método foca no 
-             <span className="text-primary font-bold"> psicológico do combate</span> e em movimentos minimalistas para máxima eficácia sob pressão. Mentor de mais de 100 professores diplomados.
+           <p className="text-slate-400 text-sm leading-relaxed tracking-wide bg-card-dark/50 p-6 rounded-[2rem] border border-border-dark whitespace-pre-line">
+             <span className="text-white font-bold">Mestre Sergio Silva</span> é uma referência na preservação e evolução das artes marciais. Iniciando sua jornada nos anos 90, dedicou as últimas três décadas ao domínio e ao aperfeiçoamento técnico de dois pilares do combate: a precisão do <span className="text-primary font-bold">Wing Chun</span> e a explosão do <span className="text-primary font-bold">Muay Thai</span>.
+
+             Mais do que ensinar golpes, o Mestre Sergio é reconhecido por desenvolver técnicas aprimoradas que unem a <span className="text-white font-bold">sabedoria tradicional</span> à eficiência moderna. Sua missão é guiar alunos de todos os níveis na busca pela <span className="text-primary font-bold">excelência física, mental e técnica</span>.
            </p>
         </section>
 
