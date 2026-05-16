@@ -1,7 +1,7 @@
 const postgres = require('postgres');
 const fs = require('fs');
 
-const connectionString = 'postgresql://postgres:SilvaDefesa2026!#@db.jaaqotmetnrwqfkppads.supabase.co:5432/postgres';
+const connectionString = 'postgresql://postgres:Rafa97559617.@db.jaaqotmetnrwqfkppads.supabase.co:5432/postgres';
 const migrations = [
     'supabase/fix_rls_recursion.sql',
     'supabase/add_email_and_requests.sql',

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'artedelutar-v2';
+const CACHE_NAME = 'artedelutar-v3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -31,20 +31,13 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network first for HTML/Root
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('/index.html');
-      })
-    );
-    return;
-  }
-
-  // Cache first for other assets
+  // Estratégia: Network First (Tenta a rede primeiro, se falhar ou estiver offline, busca no cache)
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+    fetch(event.request).then((response) => {
+      // Se a resposta for válida, podemos atualizar o cache aqui se quisermos (opcional)
+      return response;
+    }).catch(() => {
+      return caches.match(event.request);
     })
   );
 });
