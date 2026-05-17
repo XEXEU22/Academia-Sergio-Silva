@@ -31,7 +31,6 @@ const PremiumVideoUpload: React.FC = () => {
     title: '',
     video_url: '',
     thumbnail_url: '', 
-    category: 'Jiu-Jitsu',
     is_premium: false,
     is_home_featured: false,
     duration: '10:00'
@@ -39,7 +38,6 @@ const PremiumVideoUpload: React.FC = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [autoThumbnail, setAutoThumbnail] = useState<string | null>(null); 
   const [existingVideos, setExistingVideos] = useState<any[]>([]);
-  const [managementFilter, setManagementFilter] = useState('Todos');
   const [currentHomeVideo, setCurrentHomeVideo] = useState<{title: string} | null>(null);
 
   useEffect(() => {
@@ -57,7 +55,7 @@ const PremiumVideoUpload: React.FC = () => {
     if (data) setExistingVideos(data);
   };
 
-  const categories = ['Jiu-Jitsu', 'Muay Thai', 'Wing Chun', 'Kickboxing', 'Defesa'];
+
 
   const extractYoutubeId = (url: string) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -104,7 +102,7 @@ const PremiumVideoUpload: React.FC = () => {
         title: formData.title,
         video_url: finalVideoUrl,
         thumbnail_url,
-        category: formData.category,
+        category: 'Geral',
         is_premium: formData.is_premium,
         duration: formData.duration,
         instructor_id: user.id,
@@ -127,7 +125,6 @@ const PremiumVideoUpload: React.FC = () => {
         title: '',
         video_url: '',
         thumbnail_url: '',
-        category: 'Jiu-Jitsu',
         is_premium: false,
         is_home_featured: false,
         duration: '10:00'
@@ -141,9 +138,7 @@ const PremiumVideoUpload: React.FC = () => {
     }
   };
 
-  const filteredVideos = existingVideos.filter(v => 
-    managementFilter === 'Todos' || v.category === managementFilter
-  );
+
 
   return (
     <div className="bg-background-dark min-h-screen flex flex-col text-slate-100 font-display">
@@ -177,18 +172,10 @@ const PremiumVideoUpload: React.FC = () => {
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Link do YouTube</label>
                 <input required type="url" value={formData.video_url} onChange={e => setFormData({...formData, video_url: e.target.value})} className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 text-sm font-medium focus:border-primary/50 outline-none transition-all" />
              </div>
-             <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Categoria</label>
-                   <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 text-sm font-black uppercase tracking-widest outline-none appearance-none cursor-pointer">
-                      {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                   </select>
-                </div>
-                <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Duração</label>
-                   <input required type="text" value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 text-sm font-medium text-center outline-none" />
-                </div>
-             </div>
+                 <div className="space-y-2 col-span-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Duração</label>
+                    <input required type="text" value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 text-sm font-medium text-center outline-none" />
+                 </div>
              <div onClick={() => setFormData({...formData, is_home_featured: !formData.is_home_featured})} className={`p-4 rounded-2xl border cursor-pointer flex items-center justify-between transition-all ${formData.is_home_featured ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' : 'bg-background-dark/40 border-border-dark text-slate-500'}`}>
                 <div className="flex items-center gap-3">
                    <Star size={16} />
@@ -199,6 +186,20 @@ const PremiumVideoUpload: React.FC = () => {
                 </div>
              </div>
           </div>
+
+          {error && (
+            <div className="bg-rose-500/10 border border-rose-500/20 text-rose-500 p-4 rounded-2xl flex items-center gap-3 text-sm font-medium">
+              <AlertCircle size={20} />
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 p-4 rounded-2xl flex items-center gap-3 text-sm font-medium">
+              <CheckCircle2 size={20} />
+              Vídeo salvo com sucesso!
+            </div>
+          )}
 
           <button disabled={loading} className="w-full py-5 rounded-[1.8rem] bg-primary text-white font-black uppercase tracking-[0.3em] shadow-xl flex items-center justify-center gap-3">
             {loading ? <RefreshCw className="animate-spin" size={20} /> : <><Save size={20} /> Salvar Vídeo</>}
@@ -214,29 +215,14 @@ const PremiumVideoUpload: React.FC = () => {
                 Gerenciar Treinos
               </h3>
               <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                {filteredVideos.length} Vídeos
+                {existingVideos.length} Vídeos
               </span>
             </div>
             
-            <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
-               {['Todos', ...categories].map(c => (
-                 <button 
-                   key={c}
-                   onClick={() => setManagementFilter(c)}
-                   className={`shrink-0 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${
-                     managementFilter === c 
-                     ? 'bg-primary border-primary text-white shadow-lg' 
-                     : 'border-border-dark bg-card-dark text-slate-500 hover:text-white'
-                   }`}
-                 >
-                   {c}
-                 </button>
-               ))}
-            </div>
           </div>
 
           <div className="space-y-4">
-            {filteredVideos.map((video) => (
+            {existingVideos.map((video) => (
               <motion.div 
                 key={video.id}
                 layout
@@ -269,7 +255,7 @@ const PremiumVideoUpload: React.FC = () => {
             ))}
           </div>
 
-          {filteredVideos.length === 0 && (
+          {existingVideos.length === 0 && (
             <div className="py-20 text-center border border-dashed border-border-dark rounded-[2rem]">
                <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest">Nenhum vídeo listado.</p>
             </div>

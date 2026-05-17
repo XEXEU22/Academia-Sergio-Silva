@@ -18,7 +18,7 @@ import { supabase } from '../supabase';
 
 const PremiumVideoGallery: React.FC = () => {
   const navigate = useNavigate();
-  const [selectedFilter, setSelectedFilter] = useState('Todos');
+
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<any[]>([]);
   const [featuredVideo, setFeaturedVideo] = useState<any>(null);
@@ -28,9 +28,6 @@ const PremiumVideoGallery: React.FC = () => {
     async function fetchVideos() {
       setLoading(true);
       let query = supabase.from('videos').select('*, profiles(full_name)').order('created_at', { ascending: false });
-      if (selectedFilter !== 'Todos') {
-        query = query.eq('category', selectedFilter);
-      }
       const { data, error } = await query;
       if (!error && data) {
         const premiumVid = data.find(v => v.is_premium);
@@ -58,7 +55,7 @@ const PremiumVideoGallery: React.FC = () => {
       setLoading(false);
     }
     fetchVideos();
-  }, [selectedFilter]);
+  }, []);
 
   const getEmbedUrl = (url: string): string | null => {
     if (!url) return null;
@@ -71,7 +68,7 @@ const PremiumVideoGallery: React.FC = () => {
       : null;
   };
 
-  const filters = ['Todos', 'Jiu-Jitsu', 'Muay Thai', 'Wing Chun', 'Kickboxing', 'Defesa'];
+
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -101,27 +98,7 @@ const PremiumVideoGallery: React.FC = () => {
         animate="visible"
         className="flex-1 overflow-y-auto pb-32 px-6 pt-8 space-y-10"
       >
-        {/* Filtros */}
-        <section>
-          <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2">
-            <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
-              <Filter size={18} />
-            </div>
-            {filters.map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setSelectedFilter(filter)}
-                className={`h-11 shrink-0 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border ${
-                  selectedFilter === filter
-                    ? 'bg-primary text-white border-primary shadow-[0_0_20px_rgba(255,107,0,0.3)]'
-                    : 'bg-card-dark border-border-dark text-slate-500 hover:border-slate-700'
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-        </section>
+
 
         {/* Destaque da Semana */}
         <section className="space-y-4">

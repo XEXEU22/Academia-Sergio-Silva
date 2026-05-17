@@ -127,22 +127,7 @@ const PremiumPhotoGallery: React.FC = () => {
            ))}
         </section>
 
-        {/* Bottom CTA for Contributions */}
-        <motion.section 
-          variants={itemVariants}
-          className="mt-16 p-8 rounded-[3rem] bg-card-dark border border-border-dark flex flex-col items-center text-center gap-6"
-        >
-           <div className="size-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-inner shadow-primary/10">
-              <ImageIcon size={28} />
-           </div>
-           <div>
-              <h3 className="text-lg font-black tracking-widest uppercase mb-2">Contribua com a Galeria</h3>
-              <p className="text-slate-500 text-xs font-medium">Capture momentos do Tatame e compartilhe com a comunidade.</p>
-           </div>
-           <button onClick={() => navigate('/upload-photo')} className="px-8 py-4 bg-white text-background-dark rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-transform font-bold">
-              Enviar Mídia
-           </button>
-        </motion.section>
+
       </motion.main>
 
       {/* Modern Photo Modal (Simple Implementation with Framer Motion) */}
