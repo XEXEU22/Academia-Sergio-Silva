@@ -16,6 +16,7 @@ import {
 } from '../icons';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/AuthContext';
+import BottomNav from '../components/BottomNav';
 
 interface Photo {
   id: string;
@@ -34,16 +35,12 @@ const PremiumPhotoUpload: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     image_url: '',
-    category: 'Recentes',
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
 
   const [existingPhotos, setExistingPhotos] = useState<Photo[]>([]);
-  const [managementFilter, setManagementFilter] = useState('Todas');
-
-  const categories = ['Recentes', 'Instalações', 'Treinos', 'Momentos', 'Mental', 'Alunos', 'Mestres'];
 
   const fetchPhotos = async () => {
     const { data } = await supabase.from('photos').select('*').order('created_at', { ascending: false });
@@ -108,7 +105,7 @@ const PremiumPhotoUpload: React.FC = () => {
       const { error: supabaseError } = await supabase.from('photos').insert({
         title: formData.title || 'Foto sem título',
         image_url: finalImageUrl,
-        category: formData.category,
+        category: 'Geral'
       });
 
       if (supabaseError) throw supabaseError;
@@ -117,7 +114,6 @@ const PremiumPhotoUpload: React.FC = () => {
       setFormData({
         title: '',
         image_url: '',
-        category: 'Recentes',
       });
       setPhotoFile(null);
       setPhotoPreview(null);
@@ -130,10 +126,6 @@ const PremiumPhotoUpload: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const filteredPhotos = existingPhotos.filter(p => 
-    managementFilter === 'Todas' || p.category === managementFilter
-  );
 
   const containerVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
@@ -240,17 +232,6 @@ const PremiumPhotoUpload: React.FC = () => {
                 />
               </div>
             )}
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Modalidade / Filtro</label>
-              <select 
-                value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
-                className="w-full bg-background-dark/80 border border-border-dark rounded-2xl p-4 text-sm font-black uppercase tracking-widest focus:border-primary/50 outline-none transition-all appearance-none cursor-pointer"
-              >
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
           </div>
 
           {error && <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[10px] font-black uppercase tracking-widest flex gap-2"><AlertCircle size={14}/> {error}</div>}
@@ -273,29 +254,13 @@ const PremiumPhotoUpload: React.FC = () => {
                 Gerenciar Galeria
               </h3>
               <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                {filteredPhotos.length} {managementFilter !== 'Todas' ? managementFilter : 'Fotos'}
+                {existingPhotos.length} Fotos
               </span>
-            </div>
-            
-            <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
-               {['Todas', ...categories].map(c => (
-                 <button 
-                   key={c}
-                   onClick={() => setManagementFilter(c)}
-                   className={`shrink-0 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${
-                     managementFilter === c 
-                     ? 'bg-primary border-primary text-white shadow-lg' 
-                     : 'border-border-dark bg-card-dark text-slate-500 hover:text-white'
-                   }`}
-                 >
-                   {c}
-                 </button>
-               ))}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {filteredPhotos.map((photo) => (
+            {existingPhotos.map((photo) => (
               <motion.div 
                 key={photo.id}
                 layout
@@ -308,7 +273,6 @@ const PremiumPhotoUpload: React.FC = () => {
                 
                 <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
                   <div className="truncate pr-2">
-                    <p className="text-[8px] font-black text-primary uppercase tracking-widest">{photo.category}</p>
                     <p className="text-[9px] font-bold text-white truncate">{photo.title}</p>
                   </div>
                   <button 
@@ -327,9 +291,9 @@ const PremiumPhotoUpload: React.FC = () => {
             ))}
           </div>
 
-          {filteredPhotos.length === 0 && (
+          {existingPhotos.length === 0 && (
             <div className="py-20 text-center border border-dashed border-border-dark rounded-3xl">
-               <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest">Nenhuma foto nesta categoria.</p>
+               <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest">Nenhuma foto na galeria.</p>
             </div>
           )}
         </div>

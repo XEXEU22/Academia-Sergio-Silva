@@ -19,54 +19,20 @@ import { supabase } from '../supabase';
 const PremiumPhotoGallery: React.FC = () => {
   const navigate = useNavigate();
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('Recentes');
   const [loading, setLoading] = useState(true);
   const [photos, setPhotos] = useState<any[]>([]);
-  const [fallbackImages, setFallbackImages] = useState<string[]>([
-    'https://images.unsplash.com/photo-1552072092-7f9b8d63efcb?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1599058917212-d750089bc07e?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1517438476312-10d79c67750d?q=80&w=800&auto=format&fit=crop',
-  ]);
-
-  useEffect(() => {
-    async function fetchFallbacks() {
-      const { data } = await supabase
-        .from('site_assets')
-        .select('url')
-        .ilike('asset_key', 'gallery_fallback_%')
-        .order('asset_key');
-      
-      if (data && data.length > 0) {
-        setFallbackImages(data.map(d => d.url));
-      }
-    }
-    fetchFallbacks();
-  }, []);
 
   useEffect(() => {
     async function fetchPhotos() {
       setLoading(true);
-      let query = supabase.from('photos').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('photos').select('*').order('created_at', { ascending: false });
       
-      if (activeTab !== 'Recentes') {
-        query = query.eq('category', activeTab);
-      }
-
-      const { data, error } = await query;
       if (!error && data) {
         setPhotos(data.map((p, idx) => {
-          let imageUrl = p.image_url;
-          // Se a imagem for local e apontar para a pasta deletada, ou se for indefinida
-          if (!imageUrl || imageUrl.includes('/fotos/')) {
-            imageUrl = fallbackImages[idx % fallbackImages.length];
-          }
-          
           return {
             id: p.id,
-            src: imageUrl,
+            src: p.image_url,
             title: p.title,
-            category: p.category,
             idx
           };
         }));
@@ -75,7 +41,7 @@ const PremiumPhotoGallery: React.FC = () => {
     }
     
     fetchPhotos();
-  }, [activeTab]);
+  }, []);
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -101,7 +67,7 @@ const PremiumPhotoGallery: React.FC = () => {
         <button onClick={() => navigate(-1)} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">
           <ChevronLeft size={20} />
         </button>
-        <h2 className="text-sm font-bold tracking-widest uppercase">Galeria Imersiva</h2>
+        <h2 className="text-sm font-bold tracking-widest uppercase">Galeria</h2>
         <button className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">
           <Search size={20} />
         </button>
@@ -115,24 +81,8 @@ const PremiumPhotoGallery: React.FC = () => {
       >
         {/* Intro Section */}
         <section className="mb-12">
-           <motion.h1 variants={itemVariants} className="text-4xl font-black mb-3 tracking-tighter">O Caminho em <br /><span className="text-primary italic">Imagens</span></motion.h1>
-           <motion.p variants={itemVariants} className="text-slate-400 text-sm font-medium">Explore a essência da nossa escola através das lentes da arte do combate.</motion.p>
-        </section>
-
-        {/* Filter Bar with Horizontal Scroll */}
-        <section className="mb-10 flex items-center gap-3 overflow-x-auto no-scrollbar pb-2">
-           <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-primary">
-              <Filter size={18} />
-           </div>
-           {['Recentes', 'Instalações', 'Treinos', 'Momentos', 'Mental', 'Alunos', 'Mestres'].map((f, i) => (
-             <button 
-               key={i} 
-               onClick={() => setActiveTab(f)}
-               className={`h-11 shrink-0 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${activeTab === f ? 'bg-primary border-primary text-white shadow-xl shadow-primary/20' : 'bg-card-dark border-border-dark text-slate-500'}`}
-             >
-                {f}
-             </button>
-           ))}
+           <motion.h1 variants={itemVariants} className="text-4xl font-black mb-3 tracking-tighter">Fotos</motion.h1>
+           <motion.p variants={itemVariants} className="text-slate-400 text-sm font-medium">Momentos e conquistas da nossa escola.</motion.p>
         </section>
 
         {/* High Precision Masonry/Grid */}
@@ -157,17 +107,10 @@ const PremiumPhotoGallery: React.FC = () => {
              >
                 <img 
                   src={photo.src} 
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    if (!target.src.includes('unsplash')) {
-                      target.src = fallbackImages[photo.idx % fallbackImages.length];
-                    }
-                  }}
                   className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700" 
                   alt={photo.title} 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-card-dark/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 p-6 flex flex-col justify-end">
-                   <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1">{photo.category}</p>
                    <h4 className="text-sm font-black text-white leading-tight uppercase tracking-widest">{photo.title}</h4>
                    <div className="mt-4 flex items-center gap-4 text-white/60">
                       <Heart size={16} className="hover:text-red-500 transition-colors" />
