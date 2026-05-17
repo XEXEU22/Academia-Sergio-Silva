@@ -5,7 +5,8 @@ const connectionString = 'postgresql://postgres:Rafa97559617.@db.jaaqotmetnrwqfk
 const migrations = [
     'supabase/fix_rls_recursion.sql',
     'supabase/add_email_and_requests.sql',
-    'supabase/fix_master_profile.sql'
+    'supabase/fix_master_profile.sql',
+    'supabase/payments_migration.sql'
 ];
 
 const sql = postgres(connectionString, { ssl: 'require' });
