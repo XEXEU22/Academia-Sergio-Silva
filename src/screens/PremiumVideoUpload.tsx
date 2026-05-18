@@ -102,6 +102,7 @@ const PremiumVideoUpload: React.FC = () => {
         title: formData.title,
         video_url: finalVideoUrl,
         thumbnail_url,
+        category: 'Geral',
         is_premium: formData.is_premium,
         duration: formData.duration,
         instructor_id: user.id,
