@@ -193,6 +193,21 @@ const PremiumClasses: React.FC = () => {
       }
 
       setBookingSuccess(true);
+
+      const { data: assetData } = await supabase.from('site_assets').select('url').eq('asset_key', 'master_whatsapp').single();
+      const whatsappUrl = assetData?.url;
+      if (whatsappUrl) {
+        let formattedDate = customDate;
+        try {
+           const parts = customDate.split('-');
+           formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        } catch(e) {}
+        
+        const msg = `Olá Mestre Sérgio!\nGostaria de solicitar um horário especial para treino.\n\n🧑‍🎓 Aluno: ${profile?.full_name || 'Não Identificado'}\n🥋 Modalidade: ${customModality}\n📅 Data: ${formattedDate}\n⏰ Horário: ${customTime}\n\nAguardo sua confirmação!`;
+        const finalUrl = `${whatsappUrl}${whatsappUrl.includes('?') ? '&' : '?'}text=${encodeURIComponent(msg)}`;
+        window.open(finalUrl, '_blank');
+      }
+
       setTimeout(() => {
         setBookingSuccess(false);
         setIsCustomModalOpen(false);
