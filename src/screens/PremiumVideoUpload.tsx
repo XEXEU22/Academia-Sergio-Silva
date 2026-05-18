@@ -58,12 +58,12 @@ const PremiumVideoUpload: React.FC = () => {
 
 
   const extractYoutubeId = (url: string) => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
   };
 
-  const getThumbnailUrl = (id: string) => `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+  const getThumbnailUrl = (id: string) => `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -102,7 +102,6 @@ const PremiumVideoUpload: React.FC = () => {
         title: formData.title,
         video_url: finalVideoUrl,
         thumbnail_url,
-        category: 'Geral',
         is_premium: formData.is_premium,
         duration: formData.duration,
         instructor_id: user.id,
@@ -234,7 +233,6 @@ const PremiumVideoUpload: React.FC = () => {
                    </div>
                    <div>
                       <div className="flex items-center gap-2 mb-1">
-                         <span className="text-[8px] font-black uppercase text-primary tracking-widest">{video.category}</span>
                          <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{video.duration}</span>
                       </div>
                       <h4 className="text-sm font-black text-white group-hover:text-primary transition-colors truncate max-w-[200px]">{video.title}</h4>

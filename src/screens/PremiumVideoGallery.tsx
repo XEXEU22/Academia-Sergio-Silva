@@ -37,8 +37,7 @@ const PremiumVideoGallery: React.FC = () => {
             instructor: premiumVid.profiles?.full_name || 'Desconhecido',
             duration: premiumVid.duration,
             thumb: premiumVid.thumbnail_url,
-            video_url: premiumVid.video_url,
-            type: premiumVid.category
+            video_url: premiumVid.video_url
           });
         }
         const mapped = data.map(v => ({
@@ -47,8 +46,7 @@ const PremiumVideoGallery: React.FC = () => {
           instructor: v.profiles?.full_name || 'Desconhecido',
           views: `${(v.views_count || 0) / 1000}k`,
           duration: v.duration,
-          thumb: v.thumbnail_url,
-          type: v.category
+          thumb: v.thumbnail_url
         }));
         setVideos(mapped);
       }
@@ -183,8 +181,6 @@ const PremiumVideoGallery: React.FC = () => {
                 </div>
                 <div className="flex flex-1 flex-col justify-center py-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[9px] text-primary font-black uppercase tracking-widest">{video.type}</span>
-                    <span className="size-1 rounded-full bg-slate-700" />
                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{video.views} Views</span>
                   </div>
                   <h5 className="font-black text-base text-white leading-tight line-clamp-2 mb-2 group-hover:text-primary transition-colors tracking-tight">{video.title}</h5>
@@ -238,7 +234,6 @@ const PremiumVideoGallery: React.FC = () => {
               </button>
               <div className="text-center">
                 <p className="text-[10px] text-primary font-black uppercase tracking-[0.3em] mb-1">Assistindo Agora</p>
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">{activeVideo.category || activeVideo.type}</h4>
               </div>
               <button onClick={() => setActiveVideo(null)} className="p-3 rounded-2xl bg-white/5 border border-white/10 text-white">
                 <X size={24} />
